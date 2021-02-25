@@ -3,8 +3,8 @@
 
 ![GitHub Logo](/POFR.png)<br>
 
-The Penguin OS Flight Recorder collects process execution, file access and network/socket endpoint data from the Linux Operating System. Its main purpose is to <b><u>reliably reproduce from each of the monitored Linux clients </u></b>:
-<br>
+The Penguin OS Flight Recorder collects process execution, file access and network/socket endpoint data from the Linux Operating System. Its main purpose is to <b><u>reliably reproduce</u></b> from each of the monitored Linux clients:
+<br><br>
 -Event sequence for all OS level events on thethat concern process execution, file access and network endpoint creation. <br>
 -Computer account involvement and/or misbehaving apps <br>
 -Post mortem evidence after security compromises <br>
