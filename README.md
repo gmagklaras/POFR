@@ -1,5 +1,5 @@
 # POFR
-Penguin OS Flight Recorder
+<b>Penguin OS Flight Recorder</b>
 
 The Penguin OS Flight Recorder collects process execution, file access and network/socket endpoint data from the Linux Operating System. Its main purpose is to correlates the data to prove:
 <br>
