@@ -20,9 +20,9 @@ For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sam
 ## Dependencies and requirements
 
 Minimal dependencies are required. A compatible distro (see section Compatibility). Everything needed by the client and server components is provided. The only thing you need to ensure is that: 
--the POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
--The IP address, FQDN and SSH keys of the POFR server need to remain the same throughout the monitoring session.
--For the server, one needs to ensure adequate disk space (say 1.5 Gb per client per hour), RAM (4 Gigs per client) and cpu cores (4-8 cores per client). 
+* The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
+* The IP address, FQDN and SSH keys of the POFR server need to remain the same throughout the monitoring session.
+* For the server, one needs to ensure adequate disk space (say 1.5 Gb per client per hour), RAM (4 Gigs per client) and cpu cores (4-8 cores per client). 
 
 For a more detailed overview of the installation process, please consult the INSTALL.txt document. 
 
