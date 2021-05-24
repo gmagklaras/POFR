@@ -24,7 +24,7 @@ Minimal dependencies are required. A compatible distro (see section Compatibilit
 * The IP address, FQDN and SSH keys of the POFR server need to remain the same throughout the monitoring session.
 * For the server, one needs to ensure adequate disk space (say 1.5 Gb per client per hour), RAM (4 Gigs per client) and cpu cores (4-8 cores per client). 
 
-For a more detailed overview of the installation process and technical operations, please consult the [POFR Technical Operations and User Manual](doc/POFRManual.pdf). 
+For a more detailed overview of the installation process and technical operations, please consult the [POFR Technical Operations and User Manual](doc/POFRmanual.pdf). 
 
 ## License and Credits
 
