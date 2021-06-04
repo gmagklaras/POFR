@@ -102,14 +102,14 @@ select STDOUT;
 #Connect to the POFR server
 print "pofrcreg: OK. Connecting to the specified POFR server: $server to send our registration request. \n ";
 my $scp=Net::SCP->new( {"host"=>$server, "user"=>$username} );
-$scp->iscp("./request$cidstr.luarm", "$username\@$server:~/") or die $scp->{errstr};
+$scp->iscp("./request$cidstr.luarm", "$username\@$server:/home/$username/") or die $scp->{errstr};
 
 print "pofrcreg: OK. Request sent successfully to server $server \n.";
 #Wait a bit and keep attempting to obtain the response file from the server
 do {{
 	print "pofrcreg.pl: Waiting for the POFR server $server to respond on our request...\n";
 	usleep($sdelay);
-	$scp->iscp("$username\@$server:~/response$cidstr.reg", "./");
+	$scp->iscp("$username\@$server:/home/$username/response$cidstr.reg", "./");
 }} until (-e "./response$cidstr.reg");  
 
 #Now open the retrieved response file and inform of the outcome. 
