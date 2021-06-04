@@ -2,8 +2,8 @@
 ###
 use lib '../pofrperl/lib/site_perl/5.32.1';
 ###
-##mergearchive.pl -- This POFR engine script created the archive POFR tables, periodically called from the deltaparser to reduce clutter and redundancy
-#in the actively parsed tables.
+##mergearchive.pl -- This POFR engine script created the archive POFR tables, in order to reduce rendundancy of info. Called manually by the POFR server 
+#administrator.
 # George Magklaras -- Steelcyber Scientific
 
 use strict;
