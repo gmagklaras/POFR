@@ -105,12 +105,12 @@ if (-e ".scanpid") {
 if (-e ".netpid") {
 	print "scannet.pl section \n";
 	#read the pid from the file
-	open my $netp, ".netpid";
+	open my $snetp, ".netpid";
 	{
 		local $/;
-		$snetpid=<$scnp>;
+		$snetpid=<$snetp>;
 	}
-	close $netp;
+	close $snetp;
 
 	#Is this pid really running?
 	chomp (my $netres=`ps auxwww | grep scannet.pl | grep -v grep | grep $snetpid`);
