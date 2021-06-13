@@ -3,7 +3,7 @@
 ![GitHub Logo](/POFR.png)<br>
 
 ## Introduction
-The Penguin OS Flight Recorder collects process execution, file access and network/socket endpoint data from the Linux Operating System. Like an aircraft flight recorded (or black box), its main purpose is to **reliably reproduce/replay** OS level events that concern process execution, file access and network endpoint creation from each of the monitored Linux clients. IT experts (security analysts, system administrators, devops engineers and information security researchers) can then use the collected information to:
+The Penguin OS Flight Recorder collect, stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives. Like an aircraft flight recorded (or black box), its main purpose is to **reliably reproduce/replay** OS level events that concern process execution, file access and network endpoint creation from each of the monitored Linux clients. IT experts (security analysts, system administrators, devops engineers and information security researchers) can then use the collected information to:
 <br>
 * Examine/interrelate in great detail processes, file access and network endpoint events in a monitored system.
 * Detect computer account involvement misbehaving apps and/or malware. <br>
@@ -33,7 +33,11 @@ For a more detailed overview of the installation process and technical operation
 
 ## License and Credits
 
-POFR is an Open Source solution sponsored by [Steelcyber Scientific](https://www.steelcyber.com). <br>
+POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
+
+The POFR logo was designed by [Heráclito Lopez Bojorquez] (https://www.imdb.com/name/nm3736848/)
+
+The POFR project is sponsored by [Steelcyber Scientific](https://www.steelcyber.com). <br>
 
 
 
