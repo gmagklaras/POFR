@@ -35,7 +35,7 @@ For a more detailed overview of the installation process and technical operation
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
 
-The POFR logo was designed by [Heráclito Lopez Bojorquez](https://www.imdb.com/name/nm3736848/)
+The POFR logo was designed by [Heráclito López Bojórquez](https://www.imdb.com/name/nm3736848/).
 
 The POFR project is sponsored by [Steelcyber Scientific](https://www.steelcyber.com). <br>
 
