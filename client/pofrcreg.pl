@@ -2,8 +2,25 @@
 #
 use lib '../pofrperl/lib/site_perl/5.32.1';
 
-#Registers a POFR client to a POFR server
-#(C) George Magklaras -- Steelcyber Scientific
+
+#POFR - Penguin OS Forensic (or Flight) Recorder - 
+#A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
+#and derivatives.
+#Copyright (C) 2021 Georgios Magklaras
+
+#This program is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License along
+#with this program; if not, write to the Free Software Foundation, Inc.,
+#51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use strict;
 
