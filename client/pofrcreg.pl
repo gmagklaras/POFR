@@ -2,6 +2,7 @@
 #
 use lib '../pofrperl/lib/site_perl/5.32.1';
 
+#pofrcreg.pl - A script that registers a POFR client to a server.
 
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
