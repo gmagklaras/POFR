@@ -10,6 +10,11 @@ use lib '../pofrperl/lib/site_perl/5.32.1';
 #and derivatives.
 #Copyright (C) 2021 Georgios Magklaras
 
+#Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
+#`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) written by Georgios Magklaras, 
+#Arnstein Orten, February 1 2021, Assistant Director for IT infrastructure
+
+
 #This program is free software; you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
 #the Free Software Foundation; either version 2 of the License, or
