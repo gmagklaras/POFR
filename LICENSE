@@ -328,12 +328,8 @@ You should also get your employer (if you work as a programmer) or your
 school, if any, to sign a "copyright disclaimer" for the program, if
 necessary.  Here is a sample; alter the names:
 
-  Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
-  `POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
-    and derivatives ) written by Georgios Magklaras.
-
-  <signature of Ty Coon>, 1 April 1989
-  Ty Coon, President of Vice
+Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
+`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) written by Georgios Magklaras, Arnstein Orten, February 1 2021, Assistant Director for IT infrastructure
 
 This General Public License does not permit incorporating your program into
 proprietary programs.  If your program is a subroutine library, you may
