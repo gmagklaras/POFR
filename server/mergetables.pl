@@ -406,7 +406,7 @@ sub archivetables {
 	#open(my $mergeflagfh, ">" ,"/home/$usertomerge/.merge") or die "mergetables.pl Error:archivetables(): Could not open the .merge file for writing for user $usertomerge (/home/$usertomerge) due to: $!";
 	 
 	#Check to see if SELinux is in enforcing mode. Necessary for POFR production servers that have (and should have) SELinux on. 
-        my $selinuxmode=`getenforce`;
+        my $selinuxmode=`/usr/sbin/getenforce`;
         chomp($selinuxmode);
 	
 	#Check to see if the /dev/shm/luarmserver/[userid]/temp
@@ -414,8 +414,8 @@ sub archivetables {
                 print "mergetables.pl: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
                 if ($selinuxmode eq "Enforcing") {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context...\n";
-                        system "semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
-                        system "restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
                 } else {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode...\n";
                 } #end of if ($selinuxmode eq "Enforcing") else
@@ -428,8 +428,8 @@ sub archivetables {
 
                 if ($selinuxmode eq "Enforcing") {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
-                        system "semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
-                        system "restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
                 } else {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode.Just created the temp dir and proceeding... \n";
                 } #end of if ($selinuxmode eq "Enforcing") else
