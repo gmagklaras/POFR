@@ -44,7 +44,7 @@ if ($whoami[2]!=0 && $whoami[3]!=0);
 
 #Do we have the /bin/killall command installed? If yes, we need to.
 if (!(-e "/bin/killall")) {
-	die "starclient.pl error: You do not have the /bin/killall command installed. In the RedHat/CentOS/Fedora land of LINUX, this is part of the psmisc package (yum -y install psmisc OR dnf -y install psmisc). Please fix before starting the client monitoring processes.\n";
+	die "starclient.pl error: You do not have the /bin/killall command installed. In the RedHat/CentOS/Fedora land of LINUX, this is part of the psmisc package (yum -y install psmisc OR dnf -y install psmisc). For the Debian/Ubuntu ecosystem, you might like to do a: apt install psmisc . Please fix before starting the client monitoring processes.\n";
 }
 
 #Is there a sendproc.pl process running? If yes, let the one running
