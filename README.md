@@ -19,7 +19,7 @@ POFR uses a client/server architecture. Clients are the systems to monitor and t
 * Balanced computational overhead and data accuracy: The data extracted from the clients should provide a reasonable level of accuracy to reconstruct event sequences, not at the expense of computational overhead for the monitored systems.
   
 
-POFR clients have been tested with CentOS/RHEL/ALMALinux versions 7 and 8, Fedora 32/33/34, as well as recent versions of Ubuntu.
+POFR clients have been tested with CentOS/RHEL/ALMALinux versions 7 and 8, Fedora 32/33/34/35, as well as recent versions of Ubuntu.
 For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sample KVM and Docker images provided. 
 
 ## Dependencies and requirements
