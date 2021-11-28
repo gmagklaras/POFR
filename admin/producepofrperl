@@ -54,6 +54,7 @@ cpan -i Getopt::Long
 cpan -i IO::Compress::Gzip
 cpan -i Net::Ping
 cpan -i Net::OpenSSH
+cpan -i Geo::IP2Location
 echo "################################"
 echo "# ALWAYS RUN/COMPILE AS ROOT   #"
 echo "# ALMOST LIKELY YOU WILL HAVE  #"
