@@ -362,6 +362,8 @@ sub mergetables {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` char(2) DEFAULT NULL,
+  				`city` varchar(30) DEFAULT NULL,
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MERGE UNION($netunionstr) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci INSERT_METHOD=NO;"
 
@@ -636,6 +638,8 @@ sub archivetables {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` char(2) DEFAULT NULL,
+  				`city` varchar(30) DEFAULT NULL,
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MyISAM CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 
@@ -811,6 +815,8 @@ sub archivetables {
   		`dsec` tinyint(4) DEFAULT NULL,
   		`dmsec` mediumint(6) DEFAULT NULL,
  		`shasum` char(40) NOT NULL,
+		`country` char(2) DEFAULT NULL,
+  		`city` varchar(30) DEFAULT NULL,
   		PRIMARY KEY (`endpointinfo`)
 		) ENGINE=MyISAM AUTO_INCREMENT=2075 CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 

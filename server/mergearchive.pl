@@ -368,6 +368,8 @@ sub producearchive {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` char(2) DEFAULT NULL,
+  				`city` varchar(30) DEFAULT NULL,
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MyISAM CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 
