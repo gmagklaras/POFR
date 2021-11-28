@@ -1,0 +1,67 @@
+#producepofrperl -- Simple bash script to create a POFR Perl release from source with all the modules
+#Currently based on Perl 5.32.1
+#George Magklaras -- Steelcyber Scientific
+
+echo "#################################"
+echo "#  Starting the POFR PERL build #"
+echo "#################################"
+mkdir ./perlbuild
+cd ./perlbuild
+echo "################################"
+echo "#Obtaining Perl 5.32.1...      #"
+echo "################################"
+wget https://www.cpan.org/src/5.0/perl-5.32.1.tar.gz
+tar xvf perl-5.32.1.tar.gz
+cd ./perl-5.32.1/
+echo "################################"
+echo "Config/ and compilation stage: #"
+echo "################################"
+mkdir ~/pofrperl
+./Configure -des -Dprefix=~/pofrperl; make; TEST_JOBS=4 make test_harness; make install; 
+unset PERL_MB_OPT 
+unset PERL_MM_OPT 
+unset PERL_LOCAL_LIB_ROOT
+export PERL5LIB=~/pofrperl/lib/site_perl/5.32.1
+export PATH=~/pofrperl/bin:$PATH
+echo "################################"
+echo "#POFR PERL MODULE INSTALLATION#"
+echo "#           via CPAN           #"
+echo "################################"
+cpan -i Array::Utils
+cpan -i IO::Pty
+cpan -i Data::Dumper
+cpan -i DBI
+cpan -i File::Slurp
+cpan -i IO::File
+cpan -i Time::HiRes
+cpan -i Digest::SHA
+cpan -i Digest::MD5
+cpan -i Encode
+cpan -i DateTime
+cpan -i Parallel::ForkManager
+cpan -i POSIX
+cpan -i Sys::Hostname
+cpan -i Linux::Proc::Net::TCP
+cpan -i Linux::Proc::Net::UDP
+cpan -f -i Net::Nslookup
+cpan -i IO::Uncompress::Gunzip
+cpan -i List::MoreUtils
+cpan -i List::AssignRef
+cpan -i File::Copy
+cpan -i DBD::MariaDB
+cpan -i Net::SCP
+cpan -i Getopt::Long
+cpan -i IO::Compress::Gzip
+cpan -i Net::Ping
+cpan -i Net::OpenSSH
+echo "################################"
+echo "# ALWAYS RUN/COMPILE AS ROOT   #"
+echo "# ALMOST LIKELY YOU WILL HAVE  #"
+echo "# to cpan install DBD::MariaDB #"
+echo "# manually.Make sure the system#"
+echo "# has mariadb-connector-c-devel#"
+echo "# installed as a package.      #"
+echo "# ALL DONE,mv /root/pofrperl   #"
+echo "# under the LFLE directory     #"
+echo "#and gzip tarball as required  #"
+echo "################################"            
