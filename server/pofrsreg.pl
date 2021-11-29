@@ -94,7 +94,7 @@ foreach my $req (@requests) {
 			die "pofrsreg Error: Client with uuid:$uuid is ALREADY registered in the LHLT database! I cannot register this client, sorry. \n You will need to drop the database record first. \n"; 
 			#$SQLh->finish();
 		} elsif ( $cidhits[0]=="0") {
-			#The record does not exist. We need make an account and SQL INSERT the data.
+			#The record does not exist. We need make an account and database entry. Then SQL INSERT the data.
 			#Make a random-ish user id that will upload the data for that client
 			my $construid=md5_hex($cid);
 			system "useradd -d $userhome/$construid $construid";
@@ -131,23 +131,26 @@ foreach my $req (@requests) {
 	
 			select STDOUT;
 
+			#Create the database name here from cid
+			my $dbname=$cid;
+			#The dbname will be the cid without the dashes
+                        $dbname =~ s/-//g;
+
 			my ($ryear,$rmonth,$rday,$rhour,$rmin,$rsec)=timestamp();
-			my $rows=$lhltservh->do ("INSERT INTO lhltable(uuid,cid,ciduser,lastip,ryear,rmonth,rday,rhour,rmin,rsec)"
-				   . "VALUES ('$uuid','$cid','$construid','$clientipaddress',"
+
+			my $rows=$lhltservh->do ("INSERT INTO lhltable(uuid,cid,dbname,ciduser,lastip,ryear,rmonth,rday,rhour,rmin,rsec)"
+				   . "VALUES ('$uuid','$cid','$dbname','$construid','$clientipaddress',"
 			   	   . "'$ryear','$rmonth','$rday','$rhour','$rmin','$rsec')" );
 		
 			if (($rows==-1) || (!defined($rows))) {
 	       		print "lusreg Error: No records were altered. Record was not registered.\n";
-       		}	
+       			}	
 			
 			$SQLh->finish();
 
 			#If this is a new registration, we also need to create a database entry for it
-			#The name of the database will be the cid string of the registered client WITHOUT THE DASHES
 			#Quick hack, roll in the SQL schema from an external file, assuming that the 
 			#MySQL password is in .my.cnf
-			#Strip the dashes of the $cid
-                        $cid =~ s/-//g;
 
 			#Get the timeref
 			open(TMR, "<","/proc/uptime");
@@ -159,14 +162,13 @@ foreach my $req (@requests) {
 			open (DBC, ">", "/dev/shm/$timeref.dbcreate");
 			select DBC;
 			#Quote the database name to avoid SQL database creation errors
-			print "CREATE DATABASE `$cid` CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_unicode_ci';";
+			print "CREATE DATABASE `$dbname` CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_unicode_ci';";
 			close(DBC);
 			select STDOUT;
-			print "cid is $cid \n";
+			print "pofrsreg.pl Status: Created database name is: $dbname and cid is: $cid \n";
 			system ("mysql < /dev/shm/$timeref.dbcreate --password=$dbpass");
-			system ("mysql $cid < itpslschema.sql --password=$dbpass");
+			system ("mysql $dbname < itpslschema.sql --password=$dbpass");
 			unlink "/dev/shm/$timeref.dbcreate";
-			
 
 		} #end of elsif
 

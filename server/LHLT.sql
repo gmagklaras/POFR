@@ -41,6 +41,7 @@ CREATE TABLE `lhltable` (
 `hostid` bigint NOT NULL AUTO_INCREMENT,
 `uuid` varchar(36) NOT NULL,
 `cid` varchar(59) NOT NULL,
+`dbname` varchar(59) NOT NULL,
 `ciduser` varchar(32) NOT NULL,
 `lastip` varchar(35),
 `ryear` smallint NOT NULL,
