@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.32.1/x86_64-linux -I ../pofrperl/lib/5.32.1
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.0/x86_64-linux -I ../pofrperl/lib/5.34.0
 #
-use lib '../pofrperl/lib/site_perl/5.32.1';
+use lib '../pofrperl/lib/site_perl/5.34.0';
 
 #pofrsreg : SERVER side module that gandles the POFR client registration requests
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
