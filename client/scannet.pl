@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.32.1/x86_64-linux -I ../pofrperl/lib/5.32.1
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.0/x86_64-linux -I ../pofrperl/lib/5.34.0
 #
-use lib '../pofrperl/lib/site_perl/5.32.1';
+use lib '../pofrperl/lib/site_perl/5.34.0';
 
 #scannet.pl: This script parses /proc/net/tcp(6) and /proc/net/udp(6) files for network endpoint data.
 #Started and stopped by the the POFR CLIENT startclient.pl and stopclient.pl scripts.
