@@ -47,6 +47,27 @@ if (!(-e "/bin/killall")) {
 	die "starclient.pl error: You do not have the /bin/killall command installed. In the RedHat/CentOS/Fedora land of LINUX, this is part of the psmisc package (yum -y install psmisc OR dnf -y install psmisc). For the Debian/Ubuntu ecosystem, you might like to do a: apt install psmisc . Please fix before starting the client monitoring processes.\n";
 }
 
+#Sense the Linux Distro to check something
+my %os=();
+
+unless ( open(OS,"cat /etc/os-release|") ){
+        print "ErrorOpenPipe OS_release";
+        exit;
+}
+
+while (<OS>){
+        my @os_param = split /=/, $_;
+        $os{$os_param[0]}=$os_param[1];
+}
+
+print  $os{ID};
+print  $os{VERSION_ID};
+
+#Is there libnsl2 installed for Fedora?
+if (!(-e "/usr/lib64/libnsl.so.2") && ($os{ID}=="Fedora")) {
+	die "startclient.pl error: It seems that your Fedora is missing the libnsl2 library. I cannot send client data without it. Please install it with a dnf -y install libnsl2. \n";
+}
+
 #Is there a sendproc.pl process running? If yes, let the one running
 #to run. If not, start it up.
 if (-e ".sendpid") {
