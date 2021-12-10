@@ -178,13 +178,29 @@ sub producearchive {
 	if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") {
 		print "mergearchive.pl status: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
 		if ($selinuxmode eq "Enforcing") {
-			print "mergearchive.pl status: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context...\n";
+			print "mergearchive.pl status: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context and permissions...\n";
+			system "chown -R mysql /dev/shm/luarmserver/$usertomerge/temp";
                         system "semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
                         system "restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
 		} else {
 			 print "mergearchive.pl status: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode...\n";
 		} #end of if ($selinuxmode eq "Enforcing") else
 	} else {
+		#Directory does not exist and we need to create it properly.
+		#In contrast to mergetables that gets executed after a parse cycle, it is possible that a user will need to
+		#merge archive tables WITHOUT having executed a parse cycle first. This might occur after a fresh server reboot and a call to mergearchives.pl. 
+		#This can create a race hazard with a permission denied or directory cannot exist result. Thus creating the directory properly
+		if (-e "/dev/shm/luarmserver" && -d "/dev/shm/luarmserver") {
+			print "mergearchive.pl: Detected /dev/shm/luarmserver dir...Starting up! \n";} else {
+			print "mergearchive.pl Status: Could not detect /dev/shm/luarmserver dir...Fresh boot? Creating it... \n";
+			mkdir "/dev/shm/luarmserver";
+		}
+		
+		if (!(-e "/dev/shm/luarmserver/$usertomerge" && "/dev/shm/luarmserver/$usertomerge")) {
+			print "mergearchive.pl Status: Could not detect /dev/shm/luarmserver/$usertomerge dir...Creating it!";
+			mkdir "/dev/shm/luarmserver/$usertomerge" or die "mergearchive.pl Error: Cannot create user $usertomerge directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
+		}
+		
 		print "mergearchive.pl status: Starting up, not detected the /dev/shm/luarmserver/$usertomerge/temp dir.\n";
                 print "mergearchive.pl status: First time we create archive tables for user $usertomerge, thus creating the temp dir...\n";
                 mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergearchive.pl Error: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
