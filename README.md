@@ -31,9 +31,11 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 * Ubuntu 18.04 LTS/20.04 LTS
 
 For the server part, we recommend:
-* Fedora 34/35 with MariaDB (10.4 and 10.5)
+* Fedora 34/35 with MariaDB (versions 10.4 and 10.5) as the RDBMS backend
 
-Everything else needed by the client and server components is provided. The only thing you need to ensure is that: 
+Everything else needed by the client and server components is provided by the distribution and its own PERL distribution which is usually the most/recent up-to-date version (v. 5.34.0). 
+
+In addition, you will need to ensure that: 
 * The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
 * The IP address, FQDN and SSH keys of the POFR server need to remain the same throughout the monitoring session.
 * For the server, one needs to ensure adequate disk space (say 1.5 Gb per client per hour), RAM (4 Gigs per client) and cpu cores (4-8 cores per client). 
