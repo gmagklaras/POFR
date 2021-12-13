@@ -236,7 +236,7 @@ sub filerefprocess {
 		#print "filerefprocess debug: sprocpid: $sprocpid\n pid:$pid \n ppid:$ppid \n procfiles: $procfiles \n";
 
 		my @excludepid=split ',', $sprocpid;
-                if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $pid==$excludepid[2] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $ppid==$excludepid[2] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
+                if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
 			#Here we exclude the processes that are related to POFR client, as well as erroneous
 			#processes: processes that we did not manage to capture properly due to the fact they were 
 			#too fast to capture and scp transfers of POFR client data. Do nothing.
@@ -523,7 +523,7 @@ sub fileothprocess {
 			chomp $entry;
                 	($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles)=split("###", $entry);
                 	my @excludepid=split ',', $sprocpid;
-			if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $pid==$excludepid[2] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $ppid==$excludepid[2] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
+			if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
 				#Here we exclude the processes that are related to POFR client, as well as erroneous
 				#processes: processes that we did not manage to capture properly due to the fact they were 
 				#too fast to capture and scp transfers of POFR client data. Do nothing.
