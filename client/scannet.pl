@@ -40,7 +40,7 @@ use IO::Compress::Gzip;
 #Sampling delay - increased for dev mode. Originally at 300000.
 my $sdelay=300000;
 my $netpid="$$";
-my $startdelay=2000000;
+my $startdelay=1000000;
 my $sendprocpid;
 
 #Sanity checks
