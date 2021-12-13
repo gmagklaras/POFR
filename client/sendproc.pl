@@ -42,8 +42,9 @@ my $completiondelay=300000;
 my $initialdatabuildwait=60000000;
 my $samplingloopdatabuildwait=45000000;
 my $pspid="$$";
-#Mac number of files to send in each tarball 
-my $procfilestosendatonce="160";
+
+#Max number of files to send in each tarball 
+my $procfilestosendatonce="190";
 my $netfilestosendatonce="190";
 
 my $nodealhits=0;
