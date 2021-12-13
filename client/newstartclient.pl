@@ -138,7 +138,7 @@ if (-e ".scanpid") {
 	#No .scanpid file, clean scanproc.pl start
 	defined (my $pid=fork) or die "Startclient.pl Error: Cannot fork to launch the scanproc.pl for a clean start: $! \n";
         unless ($pid) {
-                        exec "./scanproc.pl";
+                        exec "./newscanproc.pl";
            } 
 	
 }#end of if (-e ".scanpid") ...
