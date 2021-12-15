@@ -136,6 +136,10 @@ DATA_LOOP:
 foreach my $data (@activeusers) {
   # Forks and returns the pid for the child:
   my $pid = $pm->start and next DATA_LOOP;
+  #Call the mergetables script
+  system "./mergetables.pl $data";
+  usleep(2000000);
+  #Now process the data
   procuser("$data");
  
   $pm->finish; # Terminates the child process
@@ -1908,10 +1912,10 @@ sub parsefiles {
 			#Sleep a bit for race hazard reduction (2 seconds)
 			print "newparseprocdelta32threads.pl Debug: sleeping for 2 seconds before calling the mergetables script. \n";
 			#Call the mergetables script
-			print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
-			system "./mergetables.pl $user";
+			#print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
+			#system "./mergetables.pl $user";
 		}
 
-	} #enf of if if ($thnumber == 32)
+	} #enf of if if ($thnumber == 1)
 	
 } #end of sub parsefiles
