@@ -136,6 +136,10 @@ DATA_LOOP:
 foreach my $data (@activeusers) {
   # Forks and returns the pid for the child:
   my $pid = $pm->start and next DATA_LOOP;
+  #Call the mergetables script
+  system "./mergetables.pl $data";
+  usleep(2000000);
+  #Now process the data
   procuser("$data");
  
   $pm->finish; # Terminates the child process
@@ -236,7 +240,7 @@ sub filerefprocess {
 		#print "filerefprocess debug: sprocpid: $sprocpid\n pid:$pid \n ppid:$ppid \n procfiles: $procfiles \n";
 
 		my @excludepid=split ',', $sprocpid;
-                if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $pid==$excludepid[2] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $ppid==$excludepid[2] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
+                if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
 			#Here we exclude the processes that are related to POFR client, as well as erroneous
 			#processes: processes that we did not manage to capture properly due to the fact they were 
 			#too fast to capture and scp transfers of POFR client data. Do nothing.
@@ -523,7 +527,7 @@ sub fileothprocess {
 			chomp $entry;
                 	($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles)=split("###", $entry);
                 	my @excludepid=split ',', $sprocpid;
-			if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $pid==$excludepid[2] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $ppid==$excludepid[2] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
+			if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
 				#Here we exclude the processes that are related to POFR client, as well as erroneous
 				#processes: processes that we did not manage to capture properly due to the fact they were 
 				#too fast to capture and scp transfers of POFR client data. Do nothing.
@@ -1522,7 +1526,8 @@ sub parsefiles {
 	foreach my $fitopr (@myprocfiles) {
 		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
 	} #end of my $fitopr (@myprocfiles)
-	
+
+
 	#Start the process of parsing the net files
 	my $netfcounter=0;
 	my $threaddirremvindex=scalar @mynetfiles;
@@ -1907,10 +1912,10 @@ sub parsefiles {
 			#Sleep a bit for race hazard reduction (2 seconds)
 			print "newparseprocdelta32threads.pl Debug: sleeping for 2 seconds before calling the mergetables script. \n";
 			#Call the mergetables script
-			print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
-			system "./mergetables.pl $user";
+			#print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
+			#system "./mergetables.pl $user";
 		}
 
-	} #enf of if if ($thnumber == 32)
+	} #enf of if if ($thnumber == 1)
 	
 } #end of sub parsefiles
