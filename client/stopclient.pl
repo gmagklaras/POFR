@@ -35,17 +35,15 @@ use POSIX;
 #my $startclientpid="$$";
 my $sendprocpid;
 my $scanprocpid;
-my $snetpid;
 
 #Sanity checks
 #Are we root?
 #
 chomp (my $result=`ps auxwww | grep sendproc.pl | grep -v grep`);
 chomp (my $procres=`ps auxwww | grep scanproc.pl | grep -v grep`);
-chomp (my $netres=`ps auxwww | grep scannet.pl | grep -v grep`);
 
-if ($result || $procres || $netres) {
-	system "killall -9 scanproc.pl scannet.pl; sleep 3; killall -9 sendproc.pl; rm .netpid; rm .scanpid; rm .sendpid";
+if ($result || $procres) {
+	system "killall -9 scanproc.pl; sleep 3; killall -9 sendproc.pl; rm .scanpid; rm .sendpid";
 } else {
 	print "stopclient.pl Info: No active POFR client processes to stop. Exiting. \n";
 }

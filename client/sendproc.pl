@@ -39,17 +39,17 @@ use POSIX;
 use Digest::SHA qw(sha256_hex sha256);
 
 my $completiondelay=300000;
-my $initialdatabuildwait=60000000;
+my $initialdatabuildwait=128000000;
 my $samplingloopdatabuildwait=45000000;
 my $pspid="$$";
 
 #Max number of files to send in each tarball 
-my $procfilestosendatonce="190";
-my $netfilestosendatonce="190";
+my $procfilestosendatonce="128";
+my $netfilestosendatonce="128";
 
 my $nodealhits=0;
-#120 seconds grace time when detecting bad connections
-my $postponetime=120000000;
+#180 seconds grace time when detecting bad connections
+my $postponetime=180000000;
 
 #Some essential sanity checks
 #Does the POFR clientauthentication file exist?

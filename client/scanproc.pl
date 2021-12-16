@@ -89,23 +89,9 @@ if (-e ".sendpid") {
 
 }
 
-if (-e ".netpid") {
-	open my $n, ".netpid";
-	{
-		local $/;
-		$scannetpid=<$n>;
-	}
-	close $n;
-		
-} else {
-	#Abort again on the absense of a .netpid file
-	unlink ".scanpid";
-	die "scanproc.pl Error: Could not find a .netpid file. Did you use the client startup scripts? \n";	
-	       
-}
 
 print "sendproc pid is: $sendprocpid \n";
-$sprocpid="$sprocpid,$sendprocpid,$scannetpid";
+$sprocpid="$sprocpid,$sendprocpid";
 
 print "The combined pid string is $sprocpid \n";
 
@@ -217,5 +203,30 @@ while (1==1) {
 	 } #END OF foreach my $proc
 	
 	close($WRDZ);
+
+	#Here we sample the network data now
+	#Get the IPv4 endpoints
+	open(TCPFD, "<","/proc/net/tcp");
+	my @tcpv4=<TCPFD>;
+	close(TCPFD);
+	open(UDPFD, "<","/proc/net/udp");
+	my @udpv4=<UDPFD>;
+	close(UDPFD);
+
+	#Get the IPv6 endpoints
+	open(TCPFD6, "<","/proc/net/tcp6");
+        my @tcpv6=<TCPFD6>;
+        close(TCPFD6);
+        open(UDPFD6, "<","/proc/net/udp6");
+        my @udpv6=<UDPFD6>;
+        close(UDPFD6);
+	
+	#Here we construct the filename from the time stamp
+	my $WRDNETZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.net.gz");
+	#open WRDNET , ">", "/dev/shm/$secs$pmicrosecs-$tz.net";
+	select $WRDNETZ;
+	$WRDNETZ->print("@tcpv4###@tcpv6###@udpv4###@udpv6");
+	close($WRDNETZ);
+
 	usleep($sdelay);
 } #END OF while loop

@@ -34,7 +34,6 @@ use POSIX;
 #my $startclientpid="$$";
 my $sendprocpid;
 my $scanprocpid;
-my $snetpid;
 
 #Sanity checks
 #Are we root?
@@ -107,8 +106,8 @@ if (-e ".sendpid") {
 
 
 
-#Are there  scanproc.pl and scannet.pl processes running? If yes, let 
-#them running together. If not, start them up together.
+#Are there a scanproc.pl process running? If yes, let 
+#it run. If not, start it up.
 #
 if (-e ".scanpid") {
 	print "scanproc.pl section \n";
@@ -143,39 +142,6 @@ if (-e ".scanpid") {
            } 
 	
 }#end of if (-e ".scanpid") ...
-
-if (-e ".netpid") {
-	print "scannet.pl section \n";
-	#read the pid from the file
-	open my $snetp, ".netpid";
-	{
-		local $/;
-		$snetpid=<$snetp>;
-	}
-	close $snetp;
-
-	#Is this pid really running?
-	chomp (my $netres=`ps auxwww | grep scannet.pl | grep -v grep | grep $snetpid`);
-
-	if ( $netres ) {
-		print "Startclient.pl Info: The scannet.pl client is already running with pid $snetpid \n";
-	} else {
-		#Remove the stale .netpid file as the scannet.pl process is not running
-		unlink "./.netpid" or die "Startclient.pl Error: Cannot remove the stale .netpid file: $! \n";
-		#Fork a clean start
-		defined (my $pid=fork) or die "Startclient.pl Error: Cannot fork to launch the scannet.pl after a stale file removal: $! \n";
-		unless ($pid) {
-			exec "./scannet.pl";
-		}
-	} #end of if ($netres) ...
-} else {
-	print "startclient.pl Info: Launching scannet.pl module...\n";
-	defined (my $pid=fork) or die "Startclient.pl Error: Cannot fork to launch the scannet.pl for a clean start: $! \n";
-	unless ($pid) {
-		exec "./scannet.pl"; 
-	}
-}#end of if (-e ".netpid")...
-
 
 
 #Subroutine definitions
