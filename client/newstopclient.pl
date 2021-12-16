@@ -39,7 +39,7 @@ my $scanprocpid;
 #Sanity checks
 #Are we root?
 #
-chomp (my $result=`ps auxwww | grep sendproc.pl | grep -v grep`);
+chomp (my $result=`ps auxwww | grep newsendproc.pl | grep -v grep`);
 chomp (my $procres=`ps auxwww | grep newscanproc.pl | grep -v grep`);
 
 if ($result || $procres) {
