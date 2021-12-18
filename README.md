@@ -9,6 +9,7 @@ The Penguin OS Flight Recorder collects, stores and organizes for further analys
 * Detect computer account involvement misbehaving apps and/or malware. <br>
 * Conduct post mortem evidence after security compromises with the evidence stowed away from the monitored system. <br>
 * Conduct incident threat response exercises and see their effect on Linux systems. 
+* Provide reliable log records for Linux systems that need to comply with the logging/auditing requirements of the PCI-DSS and HIPAA standards.
 * Obtain threat and OSINT information from the minded data.
 * Researchers can use this tool to create datasets from cybersecurity exercises and reliably observe what happens to system at OS level.
 
