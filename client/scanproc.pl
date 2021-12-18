@@ -142,7 +142,7 @@ while (1==1) {
 		#Depending on the version of the Linux kernel the structure
                 #of /proc/pid/status differs. Earlier Linux kernels (2.6.x)
                 #seem to contain the Ppid field on the fifth line [pos 4 starting from 0].
-		#Newer kernels (3.10.x and 4.x) seem to have it in the seventh line [pos 6 starting from zero]
+		#Newer kernels (3.10.x and 4.x and 5.x) seem to have it in the seventh line [pos 6 starting from zero]
 	 	my @ppidstr=split ":", $ppida[6];
 		my $ppid;
 		if ( $ppidstr[0] eq 'PPid') {
@@ -173,7 +173,7 @@ while (1==1) {
 			#We are dealing with an older 2.6.x Linux kernel  
 	 		$uid=$euid[1];
 	 	} else { 
-			#We are dealing with a 4.x Linux kernel and thus
+			#We are dealing with a 4.x/5.x Linux kernel and thus
 			#we fish for the Uid field on the 9th line from the top. 
 			@struid=split ":", $ppida[8];
 			@euid=split "\t", $struid[1];
@@ -225,7 +225,7 @@ while (1==1) {
 	my $WRDNETZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.net.gz");
 	#open WRDNET , ">", "/dev/shm/$secs$pmicrosecs-$tz.net";
 	select $WRDNETZ;
-	$WRDNETZ->print("@tcpv4###@tcpv6###@udpv4###@udpv6");
+	$WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
 	close($WRDNETZ);
 
 	usleep($sdelay);

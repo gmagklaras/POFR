@@ -1550,7 +1550,7 @@ sub parsefiles {
 		#Should we not go directly into $contents?
                 #my $contents = join("", @lines);
 		#print "Contents are: $contents \n";
-                my ($tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
+                my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
 		my $joinedtcpdata="$tcpdata $tcpv6data";
                 my $joinedudpdata="$udpdata $udpv6data";
                 open my $jtcp, ">", "$pseudoprocdir/tcp" or die "parseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
@@ -1585,6 +1585,15 @@ sub parsefiles {
 			my $pid;
                         my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
                         my $socketstr="socket:[$ninode]";
+			
+			#Are we dealing with a TCP network endpoint (not applicable to the UDP processing section  that communicates data to the POFR server? 
+			#If yes, we should not consider processing it.
+			my @excludepid=split ',', $sprocpid;
+			if ( ($destip==$serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip==$serverip and (($destport=="22" or $sourceport=="22")))) {
+					#Debug
+					print "TCP data processing: Endpoint related to server IP $serverip and port 22, thus discarded \n";
+			} else {
+
 			#my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid' AND cday='$pidsday' AND chour='$pidshour' AND cmin='$pidsmin' " );
 		        #Is this the primary thread?
 		        #...
@@ -1718,7 +1727,8 @@ sub parsefiles {
 			#Record exists (as part of the first thread netinfo table so we do nothing.
 
 			} #end of if( $shahits)...else
-
+		
+		  } #end of if ( ($destip==$serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip==$serverip and (($destport=="22" or $sourceport=="22")))  
 		} # for my $entry... END OF TCP DATA PROCESSING
 		
 		#Beginning of UDP data processing
