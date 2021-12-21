@@ -63,7 +63,7 @@ print  $os{ID};
 print  $os{VERSION_ID};
 
 #Is there libnsl2 installed for Fedora?
-if (!(-e "/usr/lib64/libnsl.so.1") && ($os{ID}=="Fedora")) {
+if (!(-e "/usr/lib64/libnsl.so.1") && ($os{ID} eq "fedora")) {
 	die "startclient.pl error: It seems that your Fedora is missing the libnsl library. I cannot send client data without it. Please install it with a dnf -y install libnsl. \n";
 }
 
