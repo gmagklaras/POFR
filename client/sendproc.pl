@@ -44,8 +44,8 @@ my $samplingloopdatabuildwait=45000000;
 my $pspid="$$";
 
 #Max number of files to send in each tarball 
-my $procfilestosendatonce="128";
-my $netfilestosendatonce="128";
+my $procfilestosendatonce="384";
+my $netfilestosendatonce="384";
 
 my $nodealhits=0;
 #180 seconds grace time when detecting bad connections
