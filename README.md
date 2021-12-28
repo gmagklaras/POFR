@@ -28,12 +28,12 @@ For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sam
 
 Minimal dependencies are required. A compatible distro. For the client part, the following Linux distributions are known to work with POFR:
 * RHEL/CentOS 7
-* RHEL/CentOS 8
+* RHEL/CentOS 8/AlmaLinux 8/Rocky Linux 8
 * Fedora 34/35
 * Ubuntu 18.04 LTS/20.04 LTS
 
 For the server part, we recommend:
-* Fedora 34/35 with MariaDB (versions 10.4 and 10.5) as the RDBMS backend
+* Fedora 34/35 with a MariaDB (versions 10.4 and 10.5) RDBMS backend.
 
 Everything else needed by the client and server components is provided by the distribution and its own PERL distribution which is usually the most/recent up-to-date version (v. 5.34.0). 
 
