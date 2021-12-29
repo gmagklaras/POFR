@@ -296,7 +296,7 @@ sub producearchive {
 		my $ndatafile="/dev/shm/luarmserver/$usertomerge/temp/periodnetdata$myntable".$pmergedstring.$usertomerge;
 		#Export the data into CSV files residing in RAM;
 		#obviously the order we SQL select the fields is important and needs to match that on of the table definition ( see @mergearchivesql)
-		my $SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum INTO OUTFILE '$ndatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myntable");
+		my $SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum,country,city INTO OUTFILE '$ndatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myntable");
 		$SQLh->execute();
 	}
 
@@ -384,6 +384,8 @@ sub producearchive {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` varchar(32) DEFAULT NULL,
+  				`city` varchar(64) DEFAULT NULL,
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MyISAM CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 
@@ -473,11 +475,11 @@ sub producearchive {
 				#Record exists do not insert.
 			} else {
 				#Do insert the record.
-				my $rows=$hostservh->do ("INSERT INTO $ninf (cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,shasum)"
+				my $rows=$hostservh->do ("INSERT INTO $ninf (cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,shasum,country,city)"
 					. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
 					. "'$fields[8]','$fields[9]','$fields[10]',$fields[11],'$fields[12]','$fields[13]',$fields[14],"
 					. "'$fields[15]','$fields[16]','$fields[17]','$fields[18]','$fields[19]',"
-					. "'$fields[27]')" );
+					. "'$fields[27]','$fields[28]','$fields[29]')" );
 				
 				if (($rows==-1) || (!defined($rows))) {
 					print "mergearchives.pl Error: User $usertoprocess: Inside the IN MEM net data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";

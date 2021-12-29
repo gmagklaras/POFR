@@ -362,6 +362,9 @@ sub mergetables {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` varchar(32) DEFAULT NULL,
+  				`city` varchar(64) DEFAULT NULL,
+
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MERGE UNION($netunionstr) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci INSERT_METHOD=NO;"
 
@@ -636,6 +639,8 @@ sub archivetables {
                                 `dsec` tinyint(4) DEFAULT NULL,
                                 `dmsec` mediumint(6) DEFAULT NULL,
                                 `shasum` char(40) NOT NULL,
+				`country` varchar(32) DEFAULT NULL,
+  				`city` varchar(64) DEFAULT NULL,
                                 PRIMARY KEY (`endpointinfo`)
                                 ) ENGINE=MyISAM CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 
@@ -714,11 +719,11 @@ sub archivetables {
                         #Record exists do not insert.
                 } else {
                         #Do insert the record.
-                	my $rows=$hostservh->do ("INSERT INTO $ninf (cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,shasum)"
+                	my $rows=$hostservh->do ("INSERT INTO $ninf (cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,shasum,country,city)"
                                         . "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
                                         . "'$fields[8]','$fields[9]','$fields[10]',$fields[11],'$fields[12]','$fields[13]',$fields[14]," 	
 					. "'$fields[15]','$fields[16]','$fields[17]','$fields[18]','$fields[19]'," 
-					. "'$fields[27]')" );
+					. "'$fields[27]','$fields[28]','$fields[29]')" );
                 	if (($rows==-1) || (!defined($rows))) {
                         	print "mergetables.pl Error: No archive net record was altered. Record $line was not registered.\n";
                 	}	
@@ -811,6 +816,8 @@ sub archivetables {
   		`dsec` tinyint(4) DEFAULT NULL,
   		`dmsec` mediumint(6) DEFAULT NULL,
  		`shasum` char(40) NOT NULL,
+		`country` varchar(32) DEFAULT NULL,
+  		`city` varchar(64) DEFAULT NULL,
   		PRIMARY KEY (`endpointinfo`)
 		) ENGINE=MyISAM AUTO_INCREMENT=2075 CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 
