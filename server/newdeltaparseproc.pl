@@ -751,6 +751,8 @@ sub fileothprocess {
 	 	close($APPENDZ);
 		
 		unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink $threadspecificpath/dev/shm/$fitopr due to: $!";
+		#Return output to STDOUT
+		select STDOUT;
       } #End of if ($remainingprocs == "1") { 
 
 } #end of fileothprocess
