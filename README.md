@@ -44,6 +44,8 @@ In addition, you will need to ensure that:
 
 For a more detailed overview of the installation process and technical operations, please consult the [POFR Technical Operations and User Manual](doc/POFRmanual.pdf). 
 
+POFR distributes a copy of the IP2Location™ Lite, an open source geolocation database with limited GeoIP2 location accuracy. The copy receives monthly updates, as part of the POFR repo maintenance. However, all users can register for an individual license in https://lite.ip2location.com or they could adapt the code to use their commercial/paid versions for greater location accuracy.  
+
 ## License and Credits
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
@@ -52,5 +54,5 @@ The POFR logo was designed by [Heráclito López Bojórquez](https://www.imdb.co
 
 The POFR project is sponsored by [Steelcyber Scientific](https://www.steelcyber.com). <br>
 
-
+[IP2Location™ Lite](https://lite.ip2location.com/faq) is a registered trademark of the open source geolocation database.
 
