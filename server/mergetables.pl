@@ -511,7 +511,7 @@ sub archivetables {
 	$SQLh->execute();
 	$SQLh=$hostservh->prepare("SELECT fileaccessid,shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dsec,dmin,dmsec INTO OUTFILE '$fdatafile' CHARACTER SET utf8mb4 FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from fileinfo");
 	$SQLh->execute();
-	$SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum INTO OUTFILE '$netdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from netinfo");
+	$SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum,country,city INTO OUTFILE '$netdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from netinfo");
 	$SQLh->execute();
 
 	print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Exported the data into CSV files residing in RAM \n";
