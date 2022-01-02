@@ -8,9 +8,9 @@ The Penguin OS Flight Recorder collects, stores and organizes for further analys
 * Examine/interrelate in great detail processes, file access and network endpoint events in a monitored system in the exact order they occurred.<br>
 * Detect computer account involvement misbehaving apps and/or malware. <br>
 * Conduct post mortem evidence after security compromises with the evidence stowed away from the monitored system. <br>
-* Conduct incident threat response exercises and see their effect on Linux systems. 
+* Conduct incident threat response exercises and study their effect on Linux systems. 
 * Provide reliable log records for Linux systems that need to comply with the logging/auditing requirements of the PCI-DSS and HIPAA standards.
-* Obtain threat and OSINT information from the collected data.
+* Obtain and create your own threat and OSINT datasets from the collected data.
 * Researchers can use this tool to create datasets from cybersecurity exercises and reliably observe what happens to system at OS level.
 
 POFR uses an agentless client/server architecture. Clients are the systems to monitor and they push data to a server via the SSH protocol. The server parses the data and updates a Relational Database that is used to store and present the data for further analysis. The overall architecture was designed to provide:
