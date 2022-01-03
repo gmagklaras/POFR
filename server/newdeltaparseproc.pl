@@ -1708,12 +1708,14 @@ sub parsefiles {
 
 						#Debug
 						#print "cyear is $cyear csec is $csec cmsec is $msecs and uid is $nuid, fetched pid:$pid and destFQDN:$destfqdn \n";
-						#Quote the destfqdn in order not to break the SQL INSERT statement
+						#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
 						$destfqdn=$hostservh->quote($destfqdn);
+						$country=$hostservh->quote($country);
+						$city=$hostservh->quote($city);
 						my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
                                    		. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
                                    		. "'$sourceip','$sourceport','$destip','$destport',"
-                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,'$country','$city')" );
+                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
                                 		if (($rows==-1) || (!defined($rows))) {
                                         		print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
                                         	}} else {
@@ -1736,14 +1738,18 @@ sub parsefiles {
                                         	$destfqdn=$resdestip;
                                         }
 
-					$destfqdn=$hostservh->quote($destfqdn);
 					#GeoIP2 locate
                                         my ($country,$city)=pofrgeoloc($destip);
+					
+					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        $country=$hostservh->quote($country);
+                                        $city=$hostservh->quote($city);
 
 					my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
 			        	. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
 					. "'$sourceip','$sourceport','$destip','$destport',"
-					. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,'$country','$city')" );
+					. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
 					if (($rows==-1) || (!defined($rows))) {
                                 		print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
                                 	} #End of if(($rows==-1)
@@ -1861,14 +1867,17 @@ sub parsefiles {
                                 			$destfqdn=$resdestip;
                         			}
 						
-						$destfqdn=$hostservh->quote($destfqdn);
 						#GeoIP2 locate
                                                 my ($country,$city)=pofrgeoloc($destip);
+						#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                                $destfqdn=$hostservh->quote($destfqdn);
+                                                $country=$hostservh->quote($country);
+                                                $city=$hostservh->quote($city);
 
 						my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
                                    		. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
                                    		. "'$sourceip','$sourceport','$destip','$destport',"
-                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,'$country','$city')" );
+                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
                                 		if (($rows==-1) || (!defined($rows))) {
                                         		print "Parseproc.pl Fatal Error (inside net loop UDP processing): No net record was altered. Record $entry was not registered.\n";
                                         	}} else {
@@ -1897,10 +1906,16 @@ sub parsefiles {
 					#GeoIP2 locate
                                         my ($country,$city)=pofrgeoloc($destip);
 
+					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        $country=$hostservh->quote($country);
+                                        $city=$hostservh->quote($city);
+
+
 					my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
                                 	. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
                                 	. "'$sourceip','$sourceport','$destip','$destport',"
-                                	. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,'$country','$city')" );
+                                	. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
 					if (($rows==-1) || (!defined($rows))) {
                                         	print "Parseproc.pl Fatal Error (inside the net loop UDP section): No process record was altered. Record $entry was not registered.\n";
                                         } #end of if (($rows==-1) 

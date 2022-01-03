@@ -712,6 +712,10 @@ sub archivetables {
                 my @fields = split "###" , $line;
 		$fields[14]=$hostservh->quote($fields[14]);
 		$fields[11]=$hostservh->quote($fields[11]);
+		#Quote also the country and city fields
+                $fields[28]=$hostservh->quote($fields[28]);
+                $fields[29]=$hostservh->quote($fields[29]);
+
 		my $SQLnh=$hostservh->prepare("SELECT COUNT(*) FROM $ninf WHERE shasum='$fields[27]' ");
 		$SQLnh->execute();
                 my @shasumhits=$SQLnh->fetchrow_array();
@@ -723,7 +727,7 @@ sub archivetables {
                                         . "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
                                         . "'$fields[8]','$fields[9]','$fields[10]',$fields[11],'$fields[12]','$fields[13]',$fields[14]," 	
 					. "'$fields[15]','$fields[16]','$fields[17]','$fields[18]','$fields[19]'," 
-					. "'$fields[27]','$fields[28]','$fields[29]')" );
+					. "'$fields[27]',$fields[28],$fields[29])" );
                 	if (($rows==-1) || (!defined($rows))) {
                         	print "mergetables.pl Error: No archive net record was altered. Record $line was not registered.\n";
                 	}	
