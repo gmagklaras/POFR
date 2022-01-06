@@ -1024,20 +1024,47 @@ sub sanitize_filename {
 #Here we implement the GeoIP2 location stuff
 sub pofrgeoloc {
 	my $iptogeolocate=shift;
-	eval {
+	my $versionofip=shift;
 
-        	my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.BIN");
+	if ( $versionofip=="4" ) {
+		eval {
 
-        	if (!defined($obj)) {
-                print STDERR Geo::IP2Location::get_last_error_message();
-        	}
+        		my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.BIN");
 
-		my $country=$obj->get_country_short($iptogeolocate);
-		my $city=$obj->get_city($iptogeolocate);
+        		if (!defined($obj)) {
+                		print STDERR Geo::IP2Location::get_last_error_message();
+        		}
 
+			my $country=$obj->get_country_short($iptogeolocate);
+			my $city=$obj->get_city($iptogeolocate);
+
+			return $country,$city;
+
+		} #End of eval for IPv4
+
+	} elsif ( $versionofip=="6" ) {
+		eval {
+			my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.IPV6.BIN");
+
+			if (!defined($obj)) {
+                                print STDERR Geo::IP2Location::get_last_error_message();
+                        }
+
+			my $country=$obj->get_country_short($iptogeolocate);
+                        my $city=$obj->get_city($iptogeolocate);
+			
+			return $country,$city;
+
+		} #End of eval for IPv6
+
+	} else {
+	       	my $country="INVALIDDATADUETOIPVERSION";
+		my $city = "INVALIDDATADUETOIPVERSION";
+	
 		return $country,$city;
 
-	} #End of eval
+	} #End of if ( $versionofip=="4" ) ... else
+		       
 
 } #end of pofrgeoloc
 
@@ -1704,7 +1731,7 @@ sub parsefiles {
                         			}
 
 						#GeoIP2 locate 
-						my ($country,$city)=pofrgeoloc($destip);
+						my ($country,$city)=pofrgeoloc($destip,$ipversion);
 
 						#Debug
 						#print "cyear is $cyear csec is $csec cmsec is $msecs and uid is $nuid, fetched pid:$pid and destFQDN:$destfqdn \n";
@@ -1739,7 +1766,7 @@ sub parsefiles {
                                         }
 
 					#GeoIP2 locate
-                                        my ($country,$city)=pofrgeoloc($destip);
+                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
 					
 					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
                                         $destfqdn=$hostservh->quote($destfqdn);
@@ -1868,7 +1895,7 @@ sub parsefiles {
                         			}
 						
 						#GeoIP2 locate
-                                                my ($country,$city)=pofrgeoloc($destip);
+                                                my ($country,$city)=pofrgeoloc($destip,$ipversion);
 						#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
                                                 $destfqdn=$hostservh->quote($destfqdn);
                                                 $country=$hostservh->quote($country);
@@ -1904,7 +1931,7 @@ sub parsefiles {
 					#Quote the destfqdn in order not to break the SQL INSERT statement
 					$destfqdn=$hostservh->quote($destfqdn);
 					#GeoIP2 locate
-                                        my ($country,$city)=pofrgeoloc($destip);
+                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
 
 					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
                                         $destfqdn=$hostservh->quote($destfqdn);
