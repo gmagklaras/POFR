@@ -102,7 +102,7 @@ my $SQLh=$lhltservh->prepare("SELECT COUNT(*) FROM lhltable where ciduser='$user
 $SQLh->execute();
 my @cidhits=$SQLh->fetchrow_array();
 if ($cidhits[0] >= "1") {
-	print "mergetables.pl status: Detected user $usertoprocess in the database...\n";
+	print "mergetables.pl STATUS: Detected user $usertoprocess in the database...\n";
 } else {
 	$SQLh->finish();
 	die "mergetables.pl Error: main part: Could not detect user $usertoprocess in the database. Are you sure the lhltable is not out of sync? \n";
@@ -116,15 +116,20 @@ if ((-e "/home/$usertoprocess") && -d ("/home/$usertoprocess")) {
 	die "mergetables Error: main part: Could not find the filesystem directory for user $usertoprocess. Are you sure the filesystem directory is not out of sync with the lhltable contents? \n";
 }
  
+#Sanity check - Do we have a proper /dev/shm/luarmserver directory created for the user?
+if (!(-e "/dev/shm/luarmserver/$usertoprocess" && "/dev/shm/luarmserver/$usertoprocess")) {
+	mkdir "/dev/shm/luarmserver/$usertoprocess" or die "mergetables.pl Error: main part: Cannot create user $usertoprocess directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
+}
+
 #Sanity check - Does the user have POFR server threads and/or merge process flags?
 my @threadflags = glob ("/home/$usertoprocess/.luarmthread*");
 my $threadfsize=scalar @threadflags;
 if ( ($threadfsize == 0) && !(-e "/home/$usertoprocess/.merge")) {
-	print "mergetables status: User $usertoprocess clear of active processing or merge threads, continuing...\n";
+	print "mergetables.pl STATUS: main part: User $usertoprocess clear of active processing or merge threads, continuing...\n";
 	open(my $mergeflagfh, ">" ,"/home/$usertoprocess/.merge") or die "mergetables.pl Error: Could not open the .merge file for writing for user $usertoprocess due to: $!";
 } else {
 	$SQLh->finish();
-	die "mergetables Error: main part: Cannot continue work on user $usertoprocess because I detected thread OR merge flags. Check it out please! \n";
+	die "mergetables.pl Error: main part: Cannot continue work on user $usertoprocess because I detected thread OR merge flags. Check it out please! \n";
 }
 
 #Get the db name for that user
@@ -160,7 +165,7 @@ $SQLh->finish();
 
 if ( ($fileinfocounts[0] >= $archiveint) || ( $ptablesnumber >= $ptablenlimit) ) {
 	#Debug
-	print "mergetables.pl status: User $usertoprocess: Found more than $archiveint hits on fileinfo: $fileinfocounts[0], OR more than $ptablenlimit ptable files: $ptablesnumber thus making archived merged tables \n";
+	print "mergetables.pl STATUS: main part: User $usertoprocess: Found more than $archiveint hits on fileinfo: $fileinfocounts[0], OR more than $ptablenlimit ptable files: $ptablesnumber thus making archived merged tables \n";
 	#Merge the existing tables before we archive them. 
 	mergetables($usertoprocess,$ldb);
 	usleep(10000000);
@@ -169,7 +174,7 @@ if ( ($fileinfocounts[0] >= $archiveint) || ( $ptablesnumber >= $ptablenlimit) )
 	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: main part: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
 } else {
 	#Debug
-	print "mergetables.pl status: User $usertoprocess: Less than $archiveint file hits: $fileinfocounts[0] OR less than $ptablenlimit ptable files: $ptablesnumber , thus continuing growing the merge tables.\n";
+	print "mergetables.pl STATUS: main part: User $usertoprocess: Less than $archiveint file hits: $fileinfocounts[0] OR less than $ptablenlimit ptable files: $ptablesnumber , thus continuing growing the merge tables.\n";
 	mergetables($usertoprocess,$ldb);
 	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: main part: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
 } 
@@ -178,7 +183,7 @@ if ( ($fileinfocounts[0] >= $archiveint) || ( $ptablesnumber >= $ptablenlimit) )
 #Subroutines here
 sub getdbauth {
 	unless(open DBAUTH, "<./.adb.dat") {
-        	die "mergetables.pl  Error: getdbauth subroutine: Could not open the .adb.dat file due to: $!";
+        	die "mergetables.pl Error: getdbauth subroutine: Could not open the .adb.dat file due to: $!";
                 }
 
         my @localarray;
