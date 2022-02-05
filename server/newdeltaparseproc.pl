@@ -1643,7 +1643,7 @@ sub parsefiles {
 			my @excludepid=split ',', $sprocpid;
 			if ( ($destip eq $serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip eq $serverip and (($destport=="22" or $sourceport=="22")))) {
 					#Debug
-					print "TCP data processing: Endpoint related to server IP $serverip and port 22, thus discarded \n";
+					#print "TCP data processing: Endpoint related to server IP $serverip and port 22, thus discarded \n";
 			} else {
 
 			#my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid' AND cday='$pidsday' AND chour='$pidshour' AND cmin='$pidsmin' " );
