@@ -425,7 +425,7 @@ sub archivetables {
 	} else {
                 print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Starting up, not detected the /dev/shm/luarmserver/$usertomerge/temp dir.\n";
                 print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: First time we create archive tables for user $usertomerge, thus creating the temp dir...\n";
-                mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergetables.pl Error: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
+                mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergetables.pl Error: Inside the archivetables subroutine: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
 		system "chown -R mysql /dev/shm/luarmserver/$usertomerge/temp";
 		system "chmod 755 /dev/shm/luarmserver/$usertomerge/temp";
 
