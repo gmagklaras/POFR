@@ -1999,7 +1999,7 @@ sub parsefiles {
 
 		continue {
 			#Sleep a bit for race hazard reduction (2 seconds)
-			print "newparseprocdelta32threads.pl Debug: sleeping for 2 seconds before calling the mergetables script. \n";
+			#print "newparseprocdelta32threads.pl Debug: sleeping for 2 seconds before calling the mergetables script. \n";
 			#Call the mergetables script
 			#print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
 			#system "./mergetables.pl $user";
