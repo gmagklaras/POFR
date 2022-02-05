@@ -168,7 +168,7 @@ sub producearchive {
         my $ldb=shift;
 
 	#Debug
-	print "mergearchive.pl status: This is producearchive($usertomerge,$ldb) starting work...\n";
+	print "mergearchive.pl STATUS: This is producearchive($usertomerge,$ldb) starting work...\n";
 	 
 	#Check to see if SELinux is in enforcing mode. Necessary for POFR production servers that have (and should have) SELinux on.
 	my $selinuxmode=`getenforce`;
@@ -176,14 +176,14 @@ sub producearchive {
 
 	#Check to see if the /dev/shm/luarmserver/[userid]/temp exists
 	if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") {
-		print "mergearchive.pl status: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
+		print "mergearchive.pl STATUS: Inside the producearchive subroutine: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
 		if ($selinuxmode eq "Enforcing") {
 			print "mergearchive.pl status: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context and permissions...\n";
 			system "chown -R mysql /dev/shm/luarmserver/$usertomerge/temp";
                         system "semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
                         system "restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
 		} else {
-			 print "mergearchive.pl status: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode...\n";
+			 print "mergearchive.pl STATUS: Inside the producearchive subroutine: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode...\n";
 		} #end of if ($selinuxmode eq "Enforcing") else
 	} else {
 		#Directory does not exist and we need to create it properly.
@@ -191,28 +191,28 @@ sub producearchive {
 		#merge archive tables WITHOUT having executed a parse cycle first. This might occur after a fresh server reboot and a call to mergearchives.pl. 
 		#This can create a race hazard with a permission denied or directory cannot exist result. Thus creating the directory properly
 		if (-e "/dev/shm/luarmserver" && -d "/dev/shm/luarmserver") {
-			print "mergearchive.pl: Detected /dev/shm/luarmserver dir...Starting up! \n";} else {
-			print "mergearchive.pl Status: Could not detect /dev/shm/luarmserver dir...Fresh boot? Creating it... \n";
+			print "mergearchive.pl STATUS: Inside the producearchive subroutine: Detected /dev/shm/luarmserver dir...Starting up! \n";} else {
+			print "mergearchive.pl STATUS: Inside the producearchive subroutine: Could not detect /dev/shm/luarmserver dir...Fresh boot? Creating it... \n";
 			mkdir "/dev/shm/luarmserver";
 		}
 		
 		if (!(-e "/dev/shm/luarmserver/$usertomerge" && "/dev/shm/luarmserver/$usertomerge")) {
-			print "mergearchive.pl Status: Could not detect /dev/shm/luarmserver/$usertomerge dir...Creating it!";
-			mkdir "/dev/shm/luarmserver/$usertomerge" or die "mergearchive.pl Error: Cannot create user $usertomerge directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
+			print "mergearchive.pl STATUS: Inside the producearchive subroutine: Could not detect /dev/shm/luarmserver/$usertomerge dir...Creating it!";
+			mkdir "/dev/shm/luarmserver/$usertomerge" or die "mergearchive.pl Error: Inside the producearchive subroutine: Cannot create user $usertomerge directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
 		}
 		
-		print "mergearchive.pl status: Starting up, not detected the /dev/shm/luarmserver/$usertomerge/temp dir.\n";
-                print "mergearchive.pl status: First time we create archive tables for user $usertomerge, thus creating the temp dir...\n";
-                mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergearchive.pl Error: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
+		print "mergearchive.pl STATUS: Inside the producearchive subroutine: Starting up, not detected the /dev/shm/luarmserver/$usertomerge/temp dir.\n";
+                print "mergearchive.pl STATUS: Inside the producearchive subroutine: First time we create archive tables for user $usertomerge, thus creating the temp dir...\n";
+                mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergearchive.pl Error: Inside the producearchive subroutine: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
 		system "chown -R mysql /dev/shm/luarmserver/$usertomerge/temp";
                 system "chmod 755 /dev/shm/luarmserver/$usertomerge/temp";
 
 		if ($selinuxmode eq "Enforcing") {
-			print "mergearchive.pl status: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
+			print "mergearchive.pl STATUS: Inside the producearchive subroutine: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
                         system "semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
                         system "restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
 		} else {
-			print "mergearchives.pl status: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode.Just created the temp dir and proceeding... \n";
+			print "mergearchives.pl STATUS: Inside the producearchive subroutine: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode.Just created the temp dir and proceeding... \n";
 		} #end of if ($selinuxmode eq "Enforcing") else
 
 	} #end of if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") else
@@ -273,7 +273,7 @@ sub producearchive {
 	my $finf="periodfile".$pmergedstring;
 	my $ninf="periodnet".$pmergedstring;
 	
-	print "mergearchive.pl status: The producearchive sub is about to make the $pinf , $finf and $ninf period tables.\n";
+	print "mergearchive.pl STATUS: Inside the producearchive subroutine: The producearchive sub is about to make the $pinf , $finf and $ninf period tables.\n";
 	
 	#DATA EXPORT TO FILE OPS
 	foreach my $myptable (@myparchtables) {
@@ -396,12 +396,12 @@ sub producearchive {
         }
 
 	#SQL INSERT from the in memory process data CSV file
-	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: producearchive sub: User $usertoprocess: During the in memory process file SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
+	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: Inside the producearchive subroutine: User $usertoprocess: During the in memory process file SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
 	my @inmempfiles=sort grep { /^periodpsdata.{1,}/  } readdir(DIR);
 	closedir(DIR);
 
 	foreach my $inmemptoprocess (@inmempfiles) {
-		open( my $pdata, "<", "/dev/shm/luarmserver/$usertoprocess/temp/$inmemptoprocess") or die "mergearchive.pl Error: Could not open process data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemptoprocess due to: $!\n";
+		open( my $pdata, "<", "/dev/shm/luarmserver/$usertoprocess/temp/$inmemptoprocess") or die "mergearchive.pl Error: Inside the producearchive subroutine: Could not open process data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemptoprocess due to: $!\n";
 		while (my $line = <$pdata>) {
 			chomp $line;
                		my @fields = split "###" , $line;
@@ -419,7 +419,7 @@ sub producearchive {
 					. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]',$fields[7],"
 					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]')" );
 				if (($rows==-1) || (!defined($rows))) {
-                                	print "mergearchives.pl Error: User $usertoprocess: Inside the IN MEM file data SQL insert for process data. No archive process record was altered. Record $line was not registered.\n";
+                                	print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM file data SQL insert for process data. No archive process record was altered. Record $line was not registered.\n";
                         	}
  			} #end of if if ( $shanormhits[0]=="1" || $shanormhits[0] >= "2" ) { else...
 		} #end of while (my $line = <$pdata>)
@@ -427,12 +427,12 @@ sub producearchive {
 	} #end of foreach $inmemptoprocess (@inmempfiles)
 
 	#SQL INSERT from the in memory file data CSV file
-	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: producearchive sub: User $usertoprocess: During the in memory file data SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
+	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: Inside the producearchive subroutine: User $usertoprocess: During the in memory file data SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
 	my @inmemffiles=sort grep { /^periodfiledata.{1,}/  } readdir(DIR);
 	closedir(DIR);
 
 	foreach my $inmemftoprocess (@inmemffiles) {
-		open( my $fdata, '<', "/dev/shm/luarmserver/$usertoprocess/temp/$inmemftoprocess" ) or die "mergearchive.pl Error: Could not open file data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemftoprocess due to: $!\n";
+		open( my $fdata, '<', "/dev/shm/luarmserver/$usertoprocess/temp/$inmemftoprocess" ) or die "mergearchive.pl Error: Inside the producearchive subroutine: Could not open file data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemftoprocess due to: $!\n";
 		while (my $line = <$fdata>) {
 			chomp $line;
         		my @fields = split "###" , $line;
@@ -449,7 +449,7 @@ sub producearchive {
 					. "VALUES ('$fields[1]',$fields[2],'$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
 					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]')" );
 				if (($rows==-1) || (!defined($rows))) {
-					print "mergearchives.pl Error: User $usertoprocess: Inside the IN MEM file data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";
+					print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM file data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";
 				}
 			}  #End of  if ( $shasumhits[0]=="1" || $shasumhits[0] >= "2" ) 
 		} #End of  if ( $shasumhits[0]=="1" || $shasumhits[0] >= "2" ) {
@@ -457,12 +457,12 @@ sub producearchive {
 	} # End of foreach my $inmemftoprocess (@inmemffiles)
 
 	#SQL INSERT from the in memory net data CSV file
-	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: producearchive sub: User $usertoprocess: During the in memory net data SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
+	opendir(DIR, "/dev/shm/luarmserver/$usertoprocess/temp") || die "mergearchive.pl Error: Inside the producearchive subroutine: User $usertoprocess: During the in memory net data SQL insertion, it was impossible to opendir /dev/shm/luarmserver/$usertoprocess due to: $!";
 	my @inmemnfiles=sort grep { /^periodnetdata.{1,}/  } readdir(DIR);
 	closedir(DIR);
 	
 	foreach my $inmemntoprocess (@inmemnfiles) {
-		open( my $ndata, '<', "/dev/shm/luarmserver/$usertoprocess/temp/$inmemntoprocess" ) or die "mergearchive.pl Error: Could not open net data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemntoprocess due to: $!\n";
+		open( my $ndata, '<', "/dev/shm/luarmserver/$usertoprocess/temp/$inmemntoprocess" ) or die "mergearchive.pl Error: Inside the producearchive subroutine: Could not open net data CSV file dev/shm/luarmserver/$usertoprocess/temp/$inmemntoprocess due to: $!\n";
 		while (my $line = <$ndata>) {
 			chomp $line;
 			my @fields = split "###" , $line;
@@ -485,7 +485,7 @@ sub producearchive {
 					. "'$fields[27]',$fields[28],$fields[29])" );
 				
 				if (($rows==-1) || (!defined($rows))) {
-					print "mergearchives.pl Error: User $usertoprocess: Inside the IN MEM net data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";
+					print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM net data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";
 				}
 
 			} #End of if ( $shasumhits[0]=="1" || $shasumhits[0] >= "2" ) {
@@ -508,30 +508,30 @@ sub producearchive {
 		unlink "/dev/shm/luarmserver/$usertoprocess/temp/$nfiletodelete";
 	}
 
-	print "mergearchive.pl:Cleaning up archive tables for user $usertoprocess ...\n";
+	print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaning up archive tables for user $usertoprocess ...\n";
 	
 	foreach my $myptabletodelete (@myparchtables) {
 		my $SQLh=$hostservh->prepare("DROP TABLE $myptabletodelete");
 		$SQLh->execute();
 	}
-	print "mergearchive.pl:cleaned up archived process tables: @myparchtables \n";
+	print "mergearchive.pl STATUS:Inside the producearchive subroutine: Cleaned up archived process tables: @myparchtables \n";
 
 	foreach my $myftabletodelete (@myfarchtables) {
 		my $SQLh=$hostservh->prepare("DROP TABLE $myftabletodelete");
 		$SQLh->execute();
 	}
-	print "mergearchive.pl:cleaned up archived file tables: @myfarchtables \n";
+	print "mergearchive.pl STATUS: Inside the producearchive subroutine: cleaned up archived file tables: @myfarchtables \n";
 
 	foreach my $myntabletodelete (@mynarchtables) {
 		my $SQLh=$hostservh->prepare("DROP TABLE $myntabletodelete");
 		$SQLh->execute();
 	}
-	print "mergearchive.pl:cleaned up archived network tables: @mynarchtables \n";
+	print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaned up archived network tables: @mynarchtables \n";
 
 	$SQLh->finish();
-	unlink "/home/$usertoprocess/.archmerge" or warn "mergearchive.pl Warning: Could not unlink the .archmerge file for user $usertoprocess due to: $!";
+	unlink "/home/$usertoprocess/.archmerge" or warn "mergearchive.pl Warning: CInside the producearchive subroutine: Could not unlink the .archmerge file for user $usertoprocess due to: $!";
 
-	print "mergearchive.pl: User $usertoprocess process archived tables are: $myparchtables[0] \n";
+	print "mergearchive.pl STATUS: Inside the producearchive subroutine: User $usertoprocess process archived tables are: $myparchtables[0] \n";
 	print "pyear:$pyear, pmonth:$pmonth, pday:$pday, phour:$phour, pmin:$pmin, psec:$psec, pmsec:$pmsec \n";
         print "lyear:$lyear, lmonth:$lmonth, lday:$lday, lhour:$lhour, lmin:$lmin, lsec:$lsec, lmsec:$lmsec \n"
 }	
