@@ -105,7 +105,7 @@ if ($cidhits[0] >= "1") {
 	print "mergetables.pl status: Detected user $usertoprocess in the database...\n";
 } else {
 	$SQLh->finish();
-	die "mergetables.pl Error: Could not detect user $usertoprocess in the database. Are you sure the lhltable is not out of sync? \n";
+	die "mergetables.pl Error: main part: Could not detect user $usertoprocess in the database. Are you sure the lhltable is not out of sync? \n";
 }
 
 #Sanity check - Does the user's home directory exist?
@@ -113,7 +113,7 @@ if ((-e "/home/$usertoprocess") && -d ("/home/$usertoprocess")) {
 	print "mergetables status: Found the filesystem directory for user $usertoprocess ... \n";
 } else {
 	$SQLh->finish();
-	die "mergetables Error: Could not find the filesystem directory for user $usertoprocess. Are you sure the filesystem directory is not out of sync with the lhltable contents? \n";
+	die "mergetables Error: main part: Could not find the filesystem directory for user $usertoprocess. Are you sure the filesystem directory is not out of sync with the lhltable contents? \n";
 }
  
 #Sanity check - Does the user have POFR server threads and/or merge process flags?
@@ -124,7 +124,7 @@ if ( ($threadfsize == 0) && !(-e "/home/$usertoprocess/.merge")) {
 	open(my $mergeflagfh, ">" ,"/home/$usertoprocess/.merge") or die "mergetables.pl Error: Could not open the .merge file for writing for user $usertoprocess due to: $!";
 } else {
 	$SQLh->finish();
-	die "mergetables Error: Cannot continue work on user $usertoprocess because I detected thread OR merge flags. Check it out please! \n";
+	die "mergetables Error: main part: Cannot continue work on user $usertoprocess because I detected thread OR merge flags. Check it out please! \n";
 }
 
 #Get the db name for that user
@@ -166,19 +166,19 @@ if ( ($fileinfocounts[0] >= $archiveint) || ( $ptablesnumber >= $ptablenlimit) )
 	usleep(10000000);
 	#Now archive the tables.
 	archivetables($usertoprocess,$ldb);
-	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
+	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: main part: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
 } else {
 	#Debug
 	print "mergetables.pl status: User $usertoprocess: Less than $archiveint file hits: $fileinfocounts[0] OR less than $ptablenlimit ptable files: $ptablesnumber , thus continuing growing the merge tables.\n";
 	mergetables($usertoprocess,$ldb);
-	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
+	unlink "/home/$usertoprocess/.merge" or warn "mergetables.pl Warning: main part: (archivetables) Could not unlink the .merge file for user $usertoprocess due to: $!";
 } 
 
 
 #Subroutines here
 sub getdbauth {
 	unless(open DBAUTH, "<./.adb.dat") {
-        	die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
+        	die "mergetables.pl  Error: getdbauth subroutine: Could not open the .adb.dat file due to: $!";
                 }
 
         my @localarray;
@@ -229,7 +229,7 @@ sub mergetables {
 	}
 
 	#Debug
-	print "mergetables.pl status: This is mergetables($usertomerge,$ldb) starting work...\n";
+	print "mergetables.pl status: Inside mergetables subroutine: This is mergetables($usertomerge,$ldb) starting work...\n";
 	
 	#Connect to the database of that user
 	my @authinfo=getdbauth();
@@ -243,7 +243,7 @@ sub mergetables {
 	my $hostservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
 	$hostservh->do('SET NAMES utf8mb4');
 	
-	print "mergetables.pl STATUS: User $usertomerge: Inside the mergetables function and about to drop the psinfo, fileinfo and netinfo tables \n";
+	print "mergetables.pl STATUS: User $usertomerge: Inside the mergetables subroutine and about to drop the psinfo, fileinfo and netinfo tables \n";
 	#Before sensing the tables to merge, dropped any previously merged tables
 	#This is essential, as it might create a race hazard if you do not do it before 
 	#sensing the tables.
@@ -257,7 +257,7 @@ sub mergetables {
         	$hostservh->do($sqlst);
         }
 
-	print "mergetables.pl STATUS: User $usertomerge: Inside the mergedtables function and dropped tables, about to sleep for 2 secs. \n";
+	print "mergetables.pl STATUS: User $usertomerge: Inside the mergetables subroutine and dropped tables, about to sleep for 2 secs. \n";
         #Wait for a couple of seconds. 
         usleep(2000000);
 
@@ -382,7 +382,7 @@ sub mergetables {
                 die "mergetables Error: inside the mergetables subroutine for user $usertomerge: Could not recreate the psinfo,fileinfo and netinfo tables. Exiting!!! \n";
         }
 
-	print "mergetables.pl STATUS: User $usertomerge: Inside the mergedtables function and recreated the merged psinfo, fileinfo and netinfo tables. Bye! \n";
+	print "mergetables.pl STATUS: User $usertomerge: Inside the mergedtables subroutine and recreated the merged psinfo, fileinfo and netinfo tables. Bye! \n";
 	#Debug
 	#Eventually when all is done, release the RDBMS handler
 	$hostservh->disconnect();
@@ -398,12 +398,12 @@ sub archivetables {
 	my @racehazardflags = glob ("/home/$usertomerge/.luarmthread*");
         my $rhflagsize=scalar @racehazardflags;
         if ( ($rhflagsize != 0) ) {
-                unlink "/home/$usertomerge/.merge" or warn "mergetables.pl Warning: Could not unlink the .merge file for user $usertomerge due to: $!";
-                die "mergetables.pl Error: user $usertomerge: Inside archivetables subroutine detected a race hazard with parseproc threads. Exiting! \n";
+                unlink "/home/$usertomerge/.merge" or warn "mergetables.pl Warning: Inside the archivetables subroutine: Could not unlink the .merge file for user $usertomerge due to: $!";
+                die "mergetables.pl Error: user $usertomerge: Inside archivetables subroutine: detected a race hazard with parseproc threads. Exiting! \n";
         }
 
 	#Debug
-	print "mergetables.pl STATUS: User $usertomerge: This is archivetables($usertomerge,$ldb) starting work...\n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: This is archivetables($usertomerge,$ldb) starting work...\n";
 
 	#Open a merge table file flag
 	#open(my $mergeflagfh, ">" ,"/home/$usertomerge/.merge") or die "mergetables.pl Error:archivetables(): Could not open the .merge file for writing for user $usertomerge (/home/$usertomerge) due to: $!";
@@ -414,9 +414,9 @@ sub archivetables {
 	
 	#Check to see if the /dev/shm/luarmserver/[userid]/temp
 	if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") {
-                print "mergetables.pl: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
+                print "mergetables.pl STATUS: Inside the archivetables subroutine: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
                 if ($selinuxmode eq "Enforcing") {
-                        print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context...\n";
+                        print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context...\n";
                         system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
                         system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
                 } else {
@@ -430,7 +430,7 @@ sub archivetables {
 		system "chmod 755 /dev/shm/luarmserver/$usertomerge/temp";
 
                 if ($selinuxmode eq "Enforcing") {
-                        print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
+                        print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
                         system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
                         system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
                 } else {
@@ -496,7 +496,7 @@ sub archivetables {
 	my $ninf="archnetinfo".$pmergedstring;
 
 	#Debug
-        print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function:About to make the $pinf , $finf and $ninf archive tables.\n";
+        print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: About to make the $pinf , $finf and $ninf archive tables.\n";
 
 	#Now, we have to read all the already existing merged tables in memory, because we are going to drop them later,
 	#to clean up the database.
@@ -514,7 +514,7 @@ sub archivetables {
 	$SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum,country,city INTO OUTFILE '$netdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from netinfo");
 	$SQLh->execute();
 
-	print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Exported the data into CSV files residing in RAM \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Exported the data into CSV files residing in RAM \n";
 
 	#Now we have read the data in memory, it is time to start cleaning up the existing tables.
 	#Starting from the merged tables
@@ -528,7 +528,7 @@ sub archivetables {
 		$hostservh->do($sqlst);
 	}
 	
-	print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Dropped the psinfo, fileinfo and netinfo tables \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Dropped the psinfo, fileinfo and netinfo tables \n";
 	#Wait for a couple of seconds
 	usleep(2000000);
 	
@@ -538,7 +538,7 @@ sub archivetables {
 	my @nettables=$hostservh->tables('', $ldb, 'netinfo%', 'TABLE');
 
 	#Debug
-	print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: pstables is: @pstables \n, filetables is: @filetables \n, nettables is: @nettables \n ";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: pstables is: @pstables \n, filetables is: @filetables \n, nettables is: @nettables \n ";
 
         foreach my $ptabletodrop (@pstables) {
         	$SQLh=$hostservh->prepare("DROP TABLE IF EXISTS $ptabletodrop");
@@ -650,9 +650,9 @@ sub archivetables {
         	$hostservh->do($sqlst);
         }
     
-	print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Created the table schema for archive tables. \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Created the table schema for archive tables. \n";
 	#SQL INSERT in memory process data CSV file
-	open( my $pdata, '<', $pdatafile) or die "mergetables.pl Error: Could not open process data CSV file $pdatafile due to: $!\n";
+	open( my $pdata, '<', $pdatafile) or die "mergetables.pl Error: Inside the archivetables subroutine: Could not open process data CSV file $pdatafile due to: $!\n";
 	while (my $line = <$pdata>) {
 		chomp $line;
 		my @fields = split "###" , $line;
@@ -670,17 +670,17 @@ sub archivetables {
                                  	. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]',$fields[7],"
                                		. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]')" );
 			if (($rows==-1) || (!defined($rows))) {
-                		print "mergetables.pl Error: No archive process record was altered. Record $line was not registered.\n";
+                		print "mergetables.pl Error: Inside the archivetables subroutine: No archive process record was altered. Record $line was not registered.\n";
                 	}	
 
 		} #end of if if ( $shanormhits[0]=="1" || $shanormhits[0] >= "2" ) { else...
 
 	} #end of while (my $line = <$pdata>)
 
-	print "mergetables.pl STATUS: Inside the archivetables subroutine for user $usertomerge: Made the $pinf table \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Made the $pinf table \n";
 
 	#SQL INSERT in memory file data CSV file
-	open( my $fdata, '<', $fdatafile) or die "mergetables.pl Error: Could not open file data CSV file $pdatafile due to: $!\n";
+	open( my $fdata, '<', $fdatafile) or die "mergetables.pl Error: Inside the archivetables subroutine: Could not open file data CSV file $pdatafile due to: $!\n";
 	while (my $line = <$fdata>) {
                 chomp $line;
                 my @fields = split "###" , $line;
@@ -697,16 +697,16 @@ sub archivetables {
                                         . "VALUES ('$fields[1]',$fields[2],'$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
                                         . "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]')" );
                 	if (($rows==-1) || (!defined($rows))) {
-                        	print "mergetables.pl Error: No archive file record was altered. Record $line was not registered.\n";
+                        	print "mergetables.pl Error: Inside the archivetables subroutine: No archive file record was altered. Record $line was not registered.\n";
                 	}
 		} #End of  if ( $shasumhits[0]=="1" || $shasumhits[0] >= "2" ) {
 
 	} #end of while (my $line = <$fdata>)
 	
-	print "mergetables.pl STATUS: Inside the archivetables subroutine for user $usertomerge: Made the $finf table \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Made the $finf table \n";
 
 	#SQL INSERT in memory network data CSV file
-	open( my $ndata, '<', $netdatafile) or die "mergetables.pl Error: Could not open net data CSV file $netdatafile due to: $!\n";
+	open( my $ndata, '<', $netdatafile) or die "mergetables.pl Error: Inside the archivetables subroutine: Could not open net data CSV file $netdatafile due to: $!\n";
 	while (my $line = <$ndata>) {
                 chomp $line;
                 my @fields = split "###" , $line;
@@ -729,13 +729,13 @@ sub archivetables {
 					. "'$fields[15]','$fields[16]','$fields[17]','$fields[18]','$fields[19]'," 
 					. "'$fields[27]',$fields[28],$fields[29])" );
                 	if (($rows==-1) || (!defined($rows))) {
-                        	print "mergetables.pl Error: No archive net record was altered. Record $line was not registered.\n";
+                        	print "mergetables.pl Error: Inside the archivetables subroutine: No archive net record was altered. Record $line was not registered.\n";
                 	}	
 		} #End of if ( $shasumhits[0]=="1" || $shasumhits[0] >= "2" ) {
 
         } #end of while (my $line = <$ndata>)
 
-	print "mergetables.pl STATUS: Inside archivetables subroutine, for user $usertomerge: Created the archivetables $pinf, $finf and $ninf. \n";
+	print "mergetables.pl STATUS: Inside archivetables subroutine: User $usertomerge: Created the archivetables $pinf, $finf and $ninf. \n";
 
 	#At that point, we need to recreate the psinfo,fileinfo,netinfo tables in their pristine non MERGE engine state
 	my @recreatetables=(
@@ -836,24 +836,24 @@ sub archivetables {
 	};
 
 	if ($@) {
-		die "mergetables Error: inside the archivetables subroutine for user $usertomerge: Could not recreate the psinfo,fileinfo and netinfo tables. Exiting!!! \n";
+		die "mergetables Error: inside the archivetables subroutine: User $usertomerge: Could not recreate the psinfo,fileinfo and netinfo tables. Exiting!!! \n";
 	}
 		
-	print "mergetables.pl STATUS: User $usertomerge: Inside the archivetables function: REMADE the psinfo, fileinfo and netinfo tables in their pristine state. \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: REMADE the psinfo, fileinfo and netinfo tables in their pristine state. \n";
 
 	#Remove the temporary SQL outfiles created to produce the archive tables.
-	unlink $pdatafile or warn "mergetables.pl Warning: Could not unlink the $pdatafile temporary process info file due to: $!";
-	unlink $fdatafile or warn "mergetables.pl Warning: Could not unlink the $fdatafile temporary file info file due to: $!";
-	unlink $netdatafile or warn "mergetabples.pl Warning: Could not unlink the $netdatafile temporary net info file due to: $!";
+	unlink $pdatafile or warn "mergetables.pl Warning: Inside the archivetables subroutine: Could not unlink the $pdatafile temporary process info file due to: $!";
+	unlink $fdatafile or warn "mergetables.pl Warning: Inside the archivetables subroutine: Could not unlink the $fdatafile temporary file info file due to: $!";
+	unlink $netdatafile or warn "mergetabples.pl Warning: Inside the archivetables subroutine: Could not unlink the $netdatafile temporary net info file due to: $!";
 
 	#Further check for race hazard where we do not get the psinfo,fileinfo and netinfo tables
 	if ( !((table_exists( $hostservh, "psinfo")) && (table_exists( $hostservh, "fileinfo")) && (table_exists( $hostservh, "netinfo"))) ) {
-    		print "mergetables.pl status: Inside archivetables subroutine: for user $usertomerge: FINAL CHECK: psinfo, fileinfo and netinfo tables present! \n";
+    		print "mergetables.pl status: Inside archivetables subroutine: User $usertomerge: FINAL CHECK: psinfo, fileinfo and netinfo tables present! \n";
 	} else {
-    		die "mergetables.pl Error: Inside archivetables subroutine: for user $usertomerge: On FINAL CHECK: tables psinfo, fileinfo and netinfo not found! Exiting!! Please investigate detected race hazard! \n";
+    		die "mergetables.pl Error: Inside archivetables subroutine: User $usertomerge: On FINAL CHECK: tables psinfo, fileinfo and netinfo not found! Exiting!! Please investigate detected race hazard! \n";
 	}
 	
-	print "mergetables.pl STATUS: User $usertomerge: Inside the architables function: I AM DONE, bye! \n";
+	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: I AM DONE, bye! \n";
 
 	#Eventually when all is done, release the RDBMS handler
 	$hostservh->disconnect();
