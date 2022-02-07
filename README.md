@@ -3,7 +3,7 @@
 ![GitHub Logo](/POFR.png)<br>
 
 ## Introduction
-The Penguin OS Flight Recorder collects, stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives. Like an aircraft flight recorded (or black box), its main purpose is to **reliably record** OS level events that concern process execution, file access and network endpoint creation from each of the monitored Linux clients. IT experts (security analysts, system administrators, devops engineers and information security researchers) can then use the collected information to:
+The Penguin OS Flight Recorder collects, stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives. Like an aircraft flight recorder (or black box), its main purpose is to **reliably record** OS level events that concern process execution, file access and network endpoint creation from each of the monitored Linux clients. IT experts (security analysts, system administrators, devops engineers and information security researchers) can then use the collected information to:
 <br>
 * Examine/interrelate in great detail processes, file access and network endpoint events in a monitored system in the exact order they occurred.<br>
 * Detect computer account involvement misbehaving apps and/or malware. <br>
