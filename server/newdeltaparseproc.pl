@@ -1989,22 +1989,5 @@ sub parsefiles {
 	#Disconnect from the host database
 	$hostservh->disconnect;
 
-	#Are we the last thread. If yes, wait so that all other threads finish and only then call the mergetables.pl script.
-	if ($thnumber == 1) {
-
-		while (my @flags=glob ("/home/$user/.luarmthread*")) {
-        		print "newparseproc32threads.pl Debug: Thread 1 on user $user. Still has some threads present, sleeping for 2 seconds \n";
-        		usleep(4000000);
-		}	
-
-		continue {
-			#Sleep a bit for race hazard reduction (2 seconds)
-			#print "newparseprocdelta32threads.pl Debug: sleeping for 2 seconds before calling the mergetables script. \n";
-			#Call the mergetables script
-			#print "newparseprocdelta32threads.pl Debug: Last thread number $thnumber on user $user exit. Calling mergetables.pl. \n";
-			#system "./mergetables.pl $user";
-		}
-
-	} #enf of if if ($thnumber == 1)
 	
 } #end of sub parsefiles
