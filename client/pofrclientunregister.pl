@@ -83,33 +83,40 @@ if (!defined($batchflag)) {
 	
 	 
 #Subroutines here
+sub getfsusername {
+	#Obtains the filesystem username from the responsecid state file
+	#to make the removal of clients easier.
+	
+	#Locate the responsecid.reg file
+	my @responses = glob ("./response*.reg");
+	#my @requests = grep { /^response$/ } readdir(DIR);
+	print "At responses is: @responses +n";
+
+	#Take the first found file (it should be only one) and parse the contents
+	open(REQ, "<","$responses[0]");
+        my $creq=<REQ>;
+        close(REQ);
+
+	my @regdata=split "#",$creq;
+	print "pofrclientunregister.pl STATUS: Inside the getusername subroutine function: Detected fs username $regdata[1] \n";
+
+	return $regdata[1];
+
+} #End of getfsusername subroutine
+
 sub unregisterclient {
+	my $fsuser=getfsusername();
+	print "pofrclientunregister.pl STATUS: Detected fs username $fsuser \n";
 	print "pofrclientunregister.pl STATUS: Inside the unregisterclient subroutine: Stopping all POFR client ACTIVE processes. \n";
 	system "echo \$PWD; ./stopclient.pl";
 	print "pofrclientunregister.pl STATUS: Removing all relevant files now \n";
 	system "echo \$PWD; rm luarm* .lcaf.dat response*";
 	print "pofrclientunregister.pl STATUS: All done. This removed all POFR client registration files and stopped active processes. \n";
 	print "pofrclientunregister.pl STATUS: Don't forget to run the pofrcleanreg.pl on the *POFR server* to fully complete the process of unregistering the client. \n";
+	print "pofrclientunregister.pl STATUS: The exact command you need to type on the POFR server is: \n";
+	print "pofrclientunregister.pl STATUS: ./pofrcleanreg.pl --usertoremove $fsuser \n";
 
 } #End of unregisterclient subroutine
-
-sub getdbauth {
-	#DBAUTH path hardwired only on the server side
-	unless(open DBAUTH, "./.adb.dat") {
-			die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
-		}
-
-	my @localarray;	
-	
-	while (<DBAUTH>) {
-		my $dbentry=$_;
-		chomp($dbentry);
-		push(@localarray, $dbentry);
-	}
-
-	return @localarray;	
-	
-} #end of getdbauth()
 
 
 sub timestamp {
