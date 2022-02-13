@@ -37,10 +37,7 @@ use Digest::MD5 qw(md5_hex);
 use Getopt::Long;
 use File::Path qw(make_path remove_tree);;
 
-my $reghome="/home/pofrsreg";
-my $userhome="/home";
 
-my $usertoremove;
 my $helpflag;
 my $batchflag;
 
@@ -48,11 +45,6 @@ my $batchflag;
 my @whoami=getpwuid($<);
 die "pofrclientunregister.pl Error:You should execute this program ONLY with root privileges. You are not root.\n"
 if ($whoami[2]!=0 && $whoami[3]!=0);
-
-#Sanity checks
-opendir(DIR, $reghome) || die "pofrclientunregister.pl Error:can't open client registration directory: $!";
-my @requests = grep { /^.*luarm$/ } readdir(DIR);
-closedir(DIR);
 
 sub dispusage {
         print "Usage:	pofrclientunregister.pl [--batch]  \n";
