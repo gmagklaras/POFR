@@ -89,8 +89,6 @@ sub getfsusername {
 	
 	#Locate the responsecid.reg file
 	my @responses = glob ("./response*.reg");
-	#my @requests = grep { /^response$/ } readdir(DIR);
-	print "At responses is: @responses +n";
 
 	#Take the first found file (it should be only one) and parse the contents
 	open(REQ, "<","$responses[0]");
@@ -112,31 +110,9 @@ sub deregisterclient {
 	print "pofrclientderegister.pl STATUS: Removing all relevant files now \n";
 	system "echo \$PWD; rm luarm* .lcaf.dat response*";
 	print "pofrclientderegister.pl STATUS: All done. This removed all POFR client registration files and stopped active processes. \n";
-	print "pofrclientderegister.pl STATUS: Don't forget to run the pofrcleanreg.pl on the *POFR server* to fully complete the process of unregistering the client. \n";
+	print "pofrclientderegister.pl STATUS: Don't forget to run the pofrcleanreg.pl on the *POFR server* to fully complete the process of deregistering the client. \n";
 	print "pofrclientderegister.pl STATUS: The exact command you need to type on the POFR server is: \n";
 	print "pofrclientderegister.pl STATUS: ./pofrcleanreg.pl --usertoremove $fsuser \n";
 
 } #End of deregisterclient subroutine
-
-
-sub timestamp {
-	#get the db authentication info
-        my @authinfo=getdbauth();
-        my ($username,$dbname,$dbpass,$hostname);
-
-        foreach my $dbentry (@authinfo) {
-                ($username,$dbname,$dbpass,$hostname)=split("," , $dbentry);
-        }
-
-        my $datasource="DBI:MariaDB:$dbname:$hostname";
-        my $itpslservh=DBI->connect ($datasource, $username, $dbpass, {RaiseError => 1, PrintError => 1});
-
-        my $SQLh=$itpslservh->prepare("select DATE_FORMAT(NOW(), '%Y-%m-%d-%k-%i-%s')");
-        $SQLh->execute();
-
-	my @timearray=$SQLh->fetchrow_array();
-	my ($year,$month,$day,$hour,$min,$sec)=split("-",$timearray[0]);
-	$SQLh->finish();
-	return ($year,$month,$day,$hour,$min,$sec);
-} #end of timestamp
 
