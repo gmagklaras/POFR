@@ -3,7 +3,7 @@
 ![GitHub Logo](/POFR.png)<br>
 
 ## Introduction
-The Penguin OS Forensic (or Flight) Recorder (POFR) collects, stores and organizes for further analysis in a relational layer
+The Penguin OS Forensic (or Flight) Recorder (POFR) collects, stores and organizes for further analysis in a relational layer:
 * process execution 
 * file access 
 * network/socket endpoint creation data 
@@ -55,7 +55,7 @@ POFR distributes a copy of the IP2Location™ Lite, an open source geolocation d
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
 
-The latest production release of POFR is v1.0.0, named "Nicole-Reine Lepaute". 
+The latest production release of POFR is [v1.0.0, named "Nicole-Reine Lepaute"](https://github.com/gmagklaras/POFR/releases/tag/v1.0.0). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
 
 The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
 
