@@ -2,7 +2,7 @@
 #
 use lib '../pofrperl/lib/site_perl/5.34.0';
 
-#pofrsreg : SERVER side module that gandles the POFR client registration requests
+#pofrsreg : SERVER side module that handles the POFR client registration requests
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
@@ -69,7 +69,7 @@ foreach my $req (@requests) {
 
          foreach my $dbentry (@authinfo) {
                 ($dbusername,$dbname,$dbpass,$hostname)=split("," , $dbentry);
-	 print " dbusername is: $dbusername, dbname is: $dbname, dbpass is: $dbpass, on hostname: $hostname \n";
+	 print " dbusername is: $dbusername, dbname is: $dbname on hostname: $hostname \n";
 	 
          }
          
