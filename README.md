@@ -3,7 +3,12 @@
 ![GitHub Logo](/POFR.png)<br>
 
 ## Introduction
-The Penguin OS Flight Recorder collects, stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives. Like an aircraft flight recorder (or black box), its main purpose is to **reliably record** OS level events that concern process execution, file access and network endpoint creation from each of the monitored Linux clients. IT experts (security analysts, system administrators, devops engineers and information security researchers) can then use the collected information to:
+The Penguin OS Forensic (or Flight) Recorder (POFR) collects, stores and organizes for further analysis in a relational layer:
+* process execution 
+* file access 
+* network/socket endpoint creation data 
+
+from the Linux Operating System and derivatives. Like an aircraft flight recorder its main purpose is to reliably record all of these events from each of the monitored clients, so that IT experts (security analysts, system administrators, DevOps engineers and information security researchers) can then use the collected information to:
 <br>
 * Examine/interrelate in great detail processes, file access and network endpoint events in a monitored system in the exact order they occurred.<br>
 * Detect computer account involvement misbehaving apps and/or malware. <br>
@@ -46,11 +51,13 @@ For a more detailed overview of the installation process and technical operation
 
 POFR distributes a copy of the IP2Location™ Lite, an open source geolocation database with limited GeoIP2 location accuracy. The copy receives monthly updates, as part of the POFR repo maintenance. However, all users can register for an individual license in https://lite.ip2location.com or they could adapt the code to use their commercial/paid versions for greater location accuracy.  
 
-## License Credits and Versions
+## License, Credits and Release Versions
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
 
-The latest production release of POFR is v1.0.0, named "Nicole-Reine Lepaute". The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
+The latest production release of POFR is [v1.0.0, named "Nicole-Reine Lepaute"](https://github.com/gmagklaras/POFR/releases/tag/v1.0.0). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
+
+The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
 
 The POFR logo was designed by [Heráclito López Bojórquez](https://www.imdb.com/name/nm3736848/).
 
