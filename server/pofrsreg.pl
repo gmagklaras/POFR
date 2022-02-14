@@ -2,7 +2,7 @@
 #
 use lib '../pofrperl/lib/site_perl/5.34.0';
 
-#pofrsreg : SERVER side module that handles the POFR client registration requests
+#pofrsreg.pl : SERVER side module that handles the POFR client registration requests
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
@@ -40,13 +40,13 @@ my $reghome="/home/pofrsreg";
 my $userhome="/home";
 
 #Sanity checks
-opendir(DIR, $reghome) || die "pofrsreg Error:can't open client registration directory: $!";
+opendir(DIR, $reghome) || die "pofrsreg.pl Error:can't open client registration directory: $!";
 my @requests = grep { /^.*luarm$/ } readdir(DIR);
 closedir(DIR);
 
 #Does the system have an scponly shell?
 if (!(-e "/bin/scponly")) {
-        die "lusreg.pl error: An scponly shell seems to be missing from the system. Please consider installing it. I won't be able to make the account for the client system without it.\n";
+        die "pofrsreg.pl Error: An scponly shell seems to be missing from the system. Please consider installing it. I won't be able to make the account for the client system without it.\n";
 }
 
 
@@ -69,7 +69,7 @@ foreach my $req (@requests) {
 
          foreach my $dbentry (@authinfo) {
                 ($dbusername,$dbname,$dbpass,$hostname)=split("," , $dbentry);
-	 print " dbusername is: $dbusername, dbname is: $dbname on hostname: $hostname \n";
+	 print "pofrsreg.pl STATUS: dbusername is: $dbusername, dbname is: $dbname on hostname: $hostname \n";
 	 
          }
          
@@ -83,15 +83,15 @@ foreach my $req (@requests) {
 		 if ($cidhits[0]=="1") {
 			#Record exists.
 			#Make a response file with an error code to send to the client
-			open(RESP, ">", "$reghome/response$cid.reg") || die "lusreg Error: Cannot create the response file to register client $uuid: $! \n";
+			open(RESP, ">", "$reghome/response$cid.reg") || die "pofrsreg.pl Error: Cannot create the response file to register client $uuid: $! \n";
 			select RESP;
 			print "Status:DENIED#Client exists. Contact POFR server admin#0302";
 			close(RESP);
 			
 			#Clean up the request and response files. The POFR client will have to send a new one, after the old DB record is dropped.
-			unlink "$reghome/request$cid.luarm" or warn "pofrsreg Warning: Could not remove request file request$cid.luarm after non effective registration for client $uuid: $! \n";
+			unlink "$reghome/request$cid.luarm" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.luarm after non effective registration for client $uuid: $! \n";
 			
-			die "pofrsreg Error: Client with uuid:$uuid is ALREADY registered in the LHLT database! I cannot register this client, sorry. \n You will need to drop the database record first. \n"; 
+			die "pofrsreg.pl Error: Client with uuid:$uuid is ALREADY registered in the LHLT database! I cannot register this client, sorry. \n You will need to drop the database record first. \n"; 
 			#$SQLh->finish();
 		} elsif ( $cidhits[0]=="0") {
 			#The record does not exist. We need make an account and database entry. Then SQL INSERT the data.
@@ -107,13 +107,13 @@ foreach my $req (@requests) {
 			
 			#Enable RSA key authentication for the created userid from the root of the client
 			mkdir "$userhome/$construid/.ssh" unless -d "$userhome/$construid/.ssh";
-			open (RSA, ">>", "$userhome/$construid/.ssh/authorized_keys") || die "lusreg Error: Cannot update the authorized keys file for user $construid to register client $uuid: $! \n";
+			open (RSA, ">>", "$userhome/$construid/.ssh/authorized_keys") || die "pofrsreg.pl Error: Cannot update the authorized keys file for user $construid to register client $uuid: $! \n";
 			select RSA;
 			print "$rsapk";
 			close(RSA);
 			#Ditto for the registrar account
 			mkdir "$reghome/.ssh" unless -d "$reghome/.ssh";
-			open (REGRSA, ">>", "$reghome/.ssh/authorized_keys") || die "lusreg Error: Cannot update the authorized keys file for the registrar user to register client $uuid: $! \n";
+			open (REGRSA, ">>", "$reghome/.ssh/authorized_keys") || die "pofrsreg.pl Error: Cannot update the authorized keys file for the registrar user to register client $uuid: $! \n";
 			select REGRSA;
 			print "$rsapk";
 			close(REGRSA);
@@ -121,13 +121,13 @@ foreach my $req (@requests) {
 			select STDOUT;
 			
 			#Make the response file passing info back to the client
-			open(RESP, ">", "$reghome/response$cid.reg") || die "lusreg Error: Cannot create the response file to register client $uuid: $! \n";
+			open(RESP, ">", "$reghome/response$cid.reg") || die "pofrsreg.pl Error: Cannot create the response file to register client $uuid: $! \n";
 			select RESP;
 			print "Status:GRANTED#$construid#$digest";
 			close(RESP);
 
 			#Clean up the request and response files, now we are done with it
-			unlink "$reghome/request$cid.luarm" or warn "lusreg Warning: Could not remove request file request$cid.luarm after registering client $uuid: $! \n";
+			unlink "$reghome/request$cid.luarm" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.luarm after registering client $uuid: $! \n";
 	
 			select STDOUT;
 
@@ -143,7 +143,7 @@ foreach my $req (@requests) {
 			   	   . "'$ryear','$rmonth','$rday','$rhour','$rmin','$rsec')" );
 		
 			if (($rows==-1) || (!defined($rows))) {
-	       		print "lusreg Error: No records were altered. Record was not registered.\n";
+	       		print "pofrsreg.pl Error: No records were altered. Record was not registered.\n";
        			}	
 			
 			$SQLh->finish();
@@ -165,7 +165,7 @@ foreach my $req (@requests) {
 			print "CREATE DATABASE `$dbname` CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_unicode_ci';";
 			close(DBC);
 			select STDOUT;
-			print "pofrsreg.pl Status: Created database name is: $dbname and cid is: $cid \n";
+			print "pofrsreg.pl STATUS: Created database name is: $dbname and cid is: $cid \n";
 			system ("mysql < /dev/shm/$timeref.dbcreate --password=$dbpass");
 			system ("mysql $dbname < itpslschema.sql --password=$dbpass");
 			unlink "/dev/shm/$timeref.dbcreate";
@@ -179,7 +179,7 @@ foreach my $req (@requests) {
 sub getdbauth {
 	#DBAUTH path hardwired only on the server side
 	unless(open DBAUTH, "./.adb.dat") {
-			die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
+			die "pofrsreg.pl Error:getdbauth: Could not open the .adb.dat file due to: $!";
 		}
 
 	my @localarray;	
