@@ -1603,9 +1603,26 @@ sub parsefiles {
                 #my $contents = join("", @lines);
 		#print "Contents are: $contents \n";
                 my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
+		#Remove the header line that is unparseable
+		$tcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		$udpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		$tcpv6data =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+		$udpv6data =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+
 		my $joinedtcpdata="$tcpdata $tcpv6data";
                 my $joinedudpdata="$udpdata $udpv6data";
-                open my $jtcp, ">", "$pseudoprocdir/tcp" or die "parseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
+
+		#Remove the header line that is unparseable
+		#$joinedtcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		#$joinedudpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		#$joinedtcpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		#$joinedudpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+		#$joinedtcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+		#$joinedudpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+		#$joinedtcpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+		#$joinedudpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+                
+		open my $jtcp, ">", "$pseudoprocdir/tcp" or die "parseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
                 print $jtcp "$joinedtcpdata";
                 close $jtcp;
                 open my $judp, ">", "$pseudoprocdir/udp" or die "parseproc.pl Error: Cannot create pseudoproc file for udpdata. User $user processing client file $fitopr : $!";
