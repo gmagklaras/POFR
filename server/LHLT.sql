@@ -43,6 +43,7 @@ CREATE TABLE `lhltable` (
 `cid` varchar(59) NOT NULL,
 `dbname` varchar(59) NOT NULL,
 `ciduser` varchar(32) NOT NULL,
+`hostname` varchar(130) NOT NULL,
 `lastip` varchar(35),
 `ryear` smallint NOT NULL,
 `rmonth` tinyint(4) NOT NULL,
