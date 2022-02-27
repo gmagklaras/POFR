@@ -137,10 +137,13 @@ foreach my $req (@requests) {
                         $dbname =~ s/-//g;
 
 			my ($ryear,$rmonth,$rday,$rhour,$rmin,$rsec)=timestamp();
+			
+			#Quote the client hostname in case there are special characters
+			$clienthostname=$lhltservh->quote($clienthostname);
 
-			my $rows=$lhltservh->do ("INSERT INTO lhltable(uuid,cid,dbname,ciduser,lastip,ryear,rmonth,rday,rhour,rmin,rsec)"
+			my $rows=$lhltservh->do ("INSERT INTO lhltable(uuid,cid,dbname,ciduser,lastip,hostname,ryear,rmonth,rday,rhour,rmin,rsec)"
 				   . "VALUES ('$uuid','$cid','$dbname','$construid','$clientipaddress',"
-			   	   . "'$ryear','$rmonth','$rday','$rhour','$rmin','$rsec')" );
+			   	   . "$clienthostname, '$ryear','$rmonth','$rday','$rhour','$rmin','$rsec')" );
 		
 			if (($rows==-1) || (!defined($rows))) {
 	       		print "pofrsreg.pl Error: No records were altered. Record was not registered.\n";
