@@ -1,3 +1,29 @@
+v1.1.0 named "Lorinda Cherry" (Feb 27 2022):
+- Bug fixes: 
+  - mergetables.pl: Removed a loop where we waiting from thread 1 for the other threads to finish to call mergetables.pl. Mergetables.pl is called at the beginnig of the
+    processing cycle. (https://github.com/gmagklaras/POFR/commit/aa7691f4fd6169571fa832e6cfef04c6cbbddb32)
+  - pofrclientunregister.pl: Fixed issue with the script erroneously checking for server user registration directories by removing left over sanity check code from the 
+    server part. (https://github.com/gmagklaras/POFR/commit/8a8233d61d66939e0a0bef204302df6783e157be)
+- Security issues:
+  - pofrsreg.pl: Possible security issue: Remove the display from status messages of the variable. Not safe and not necessary. 
+    (https://github.com/gmagklaras/POFR/commit/86306a72de8438bea213d96da8a54b791a58c171
+- Impovements/upgrades/compatibility issues:
+  - Added the utility scripts:
+    pofrclientderegister.pl (client side: https://github.com/gmagklaras/POFR/commit/b560ca51d1841a386a055715e464538df0611f64)
+    pofrcleanreg.pl (server side: https://github.com/gmagklaras/POFR/commit/a24c6e0f8dfce99760b38f31bec3460b335437bc)
+    to automate/aid the deregistration of systems from the POFR solution
+  - Various improvements of the POFR Technical Operations and User Manual (https://github.com/gmagklaras/POFR/commit/69d422288f78ad2d9ac7106892ece60620dfa340)
+  - pofrsreg.pl: Improved/refactored the STATUS, Warning and Error messages. (pofrsreg.pl: Improved/refactored the STATUS, Warning and Error messages.)
+  - pofrperlrhelcentos8x86_64.tar.gz: Added a POFR Perl release 5.34.0 for the RHEL/ALMA/Rocky/CentOS 8 ecosystem.
+    (https://github.com/gmagklaras/POFR/commit/75cbce1b26c4ede08ba55277ec21a89835427a53)
+  - LHLT.sql: Added a client hostname field. However, this creates incompatibility of the 'lhlt.lhltable' table with previous versions/releases.
+    To avoid re-registering clients on the server side and constructing the table from scratch, the easiest thing to do is to:
+    -a)Wait for all POFR server threads to finish processing.
+    -b)Connect to the POFR server MariaDB as administrator as described in section E of the POFR Technical Operations and User Manual and issue the following:
+     use lhlt;
+     ALTER TABLE lhltable ADD hostname varchar(130) NOT NULL AFTER lastip;
+     These commands should allow you to alter the table on the fly. You can then continue processing data with currently registered systems with no issues.
+    
 v1.0.0 named "Nicole-Reine Lepaute" (Feb 05 2022):
 - Bug fixes: Race errors halting execution of parse cycles when calling the mergetables.pl and mergearchives.pl scripts are now fixed.
 - Feature implementation: GeoIP2 locating IPv4 and IPV6 destination IP addresses has been implemented by incorporating the IP2Location Lite databases. 
