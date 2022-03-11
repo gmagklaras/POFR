@@ -508,28 +508,28 @@ sub producearchive {
 		unlink "/dev/shm/luarmserver/$usertoprocess/temp/$nfiletodelete";
 	}
 
-	print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaning up archive tables for user $usertoprocess ...\n";
+	#print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaning up archive tables for user $usertoprocess ...\n";
 	
-	foreach my $myptabletodelete (@myparchtables) {
-		my $SQLh=$hostservh->prepare("DROP TABLE $myptabletodelete");
-		$SQLh->execute();
-	}
-	print "mergearchive.pl STATUS:Inside the producearchive subroutine: Cleaned up archived process tables: @myparchtables \n";
+	#foreach my $myptabletodelete (@myparchtables) {
+	#	my $SQLh=$hostservh->prepare("DROP TABLE $myptabletodelete");
+        #		$SQLh->execute();
+	#}
+	#print "mergearchive.pl STATUS:Inside the producearchive subroutine: Cleaned up archived process tables: @myparchtables \n";
 
-	foreach my $myftabletodelete (@myfarchtables) {
-		my $SQLh=$hostservh->prepare("DROP TABLE $myftabletodelete");
-		$SQLh->execute();
-	}
-	print "mergearchive.pl STATUS: Inside the producearchive subroutine: cleaned up archived file tables: @myfarchtables \n";
+	#foreach my $myftabletodelete (@myfarchtables) {
+	#	my $SQLh=$hostservh->prepare("DROP TABLE $myftabletodelete");
+	#	$SQLh->execute();
+	#}
+	#print "mergearchive.pl STATUS: Inside the producearchive subroutine: cleaned up archived file tables: @myfarchtables \n";
 
-	foreach my $myntabletodelete (@mynarchtables) {
-		my $SQLh=$hostservh->prepare("DROP TABLE $myntabletodelete");
-		$SQLh->execute();
-	}
-	print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaned up archived network tables: @mynarchtables \n";
+	#foreach my $myntabletodelete (@mynarchtables) {
+	#	my $SQLh=$hostservh->prepare("DROP TABLE $myntabletodelete");
+	#	$SQLh->execute();
+	#}
+	#print "mergearchive.pl STATUS: Inside the producearchive subroutine: Cleaned up archived network tables: @mynarchtables \n";
 
 	$SQLh->finish();
-	unlink "/home/$usertoprocess/.archmerge" or warn "mergearchive.pl Warning: CInside the producearchive subroutine: Could not unlink the .archmerge file for user $usertoprocess due to: $!";
+	unlink "/home/$usertoprocess/.archmerge" or warn "mergearchive.pl Warning: Inside the producearchive subroutine: Could not unlink the .archmerge file for user $usertoprocess due to: $!";
 
 	print "mergearchive.pl STATUS: Inside the producearchive subroutine: User $usertoprocess process archived tables are: $myparchtables[0] \n";
 	print "pyear:$pyear, pmonth:$pmonth, pday:$pday, phour:$phour, pmin:$pmin, psec:$psec, pmsec:$pmsec \n";
