@@ -48,8 +48,8 @@ my $procfilestosendatonce="384";
 my $netfilestosendatonce="384";
 
 my $nodealhits=0;
-#180 seconds grace time when detecting bad connections
-my $postponetime=180000000;
+#240 seconds (4 minutes) grace time when detecting bad connections
+my $postponetime=240000000;
 
 #Some essential sanity checks
 #Does the POFR clientauthentication file exist?
