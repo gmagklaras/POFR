@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.0/x86_64-linux -I ../pofrperl/lib/5.34.0
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1
 #
-use lib '../pofrperl/lib/site_perl/5.34.0';
+use lib '../pofrperl/lib/site_perl/5.34.1';
 
 #pofrcleanreg.pl: SERVER side module that removes a registered POFR client
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
