@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.0/x86_64-linux -I ../pofrperl/lib/5.34.0
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1
 ###
-use lib '../pofrperl/lib/site_perl/5.34.0';
+use lib '../pofrperl/lib/site_perl/5.34.1';
 
 use strict;
 use warnings;
@@ -288,11 +288,106 @@ sub check_requested_data_time_range {
 
 } #End of check_requested_data_time_range subroutine
 
-#sub get_requested_data_time_range: Grabs a list of archtables from a requested data time range
-#ACCEPTS: a username and a list of requested data
-#RETURNS: A list of arch tables for the requested data range, if the data exists
+#sub date_is_later_than: Examines whether specified date and time B is later than date and time A. 
+#ACCEPTS: Two distinct dates and times A and B
+#RETURNS: "True" if B is later than A
+#         "False" if B is earlier than or equal to A
+sub date_is_later_than {
+	my $Aday=shift;
+        my $Amonth=shift;
+        my $Ayear=shift;
+        my $Ahour=shift;
+        my $Amin=shift;
+        my $Asec=shift;
+        my $Bday=shift;
+        my $Bmonth=shift;
+        my $Byear=shift;
+        my $Bhour=shift;
+        my $Bmin=shift;
+        my $Bsec=shift;
+
+	my $dateA = DateTime->new(
+        	year      => $Ayear,
+        	month     => $Amonth,
+        	day       => $Aday,
+                hour      => $Ahour,
+                minute    => $Amin,
+                second    => $Asec,
+        );
+
+	my $dateB = DateTime->new(
+                year      => $Byear,
+                month     => $Bmonth,
+                day       => $Bday,
+                hour      => $Bhour,
+                minute    => $Bmin,
+                second    => $Bsec,
+        );
+
+	my $delta = DateTime->compare($dateB, $dateA);
+
+	if ( $delta > "0") {
+	       return "True";
+	} else {
+ 	       return "False";
+	}	       
+
+
+} #End of subroutine date_is_later_than 
+
+#sub date_is_earlier_than: Examines whether specified date and time B is earlier than date and time A.
+#ACCEPTS: Two distinct dates and times A and B
+#RETURNS: "True" if B is earlier than A
+#         "False" if B is later than or equal (coincides) to A
+sub date_is_earlier_than {
+        my $Aday=shift;
+        my $Amonth=shift;
+        my $Ayear=shift;
+        my $Ahour=shift;
+        my $Amin=shift;
+        my $Asec=shift;
+        my $Bday=shift;
+        my $Bmonth=shift;
+        my $Byear=shift;
+        my $Bhour=shift;
+        my $Bmin=shift;
+        my $Bsec=shift;
+
+        my $dateA = DateTime->new(
+                year      => $Ayear,
+                month     => $Amonth,
+                day       => $Aday,
+                hour      => $Ahour,
+                minute    => $Amin,
+                second    => $Asec,
+        );
+
+        my $dateB = DateTime->new(
+                year      => $Byear,
+                month     => $Bmonth,
+                day       => $Bday,
+                hour      => $Bhour,
+                minute    => $Bmin,
+                second    => $Bsec,
+        );
+
+	my $delta = DateTime->compare($dateB, $dateA);
+	
+	if ( $delta < "0") {
+               return "True";
+        } else {
+               return "False";
+        }
+
+
+} #End of subroutine date_is_earlier_than
+
+
+#sub get_requested_data_from_time_range: Provides a list of archtables from a requested/specified data time range
+#ACCEPTS: a username and a specified/requested time range
+#RETURNS: A list of arch relational tables for the requested time range, *if* the data exists
 #	  A empty list of arrays if the data does not exist or if there is another problem with the query 
-sub get_requested_data_time_range {
+sub get_requested_data_from_time_range {
 	my $usertoprocess=shift;
 	my $rpday=shift;
         my $rpmonth=shift;
@@ -307,9 +402,15 @@ sub get_requested_data_time_range {
         my $rlmin=shift;
         my $rlsec=shift;
 
-	my @targetprocessarchtables;
+	#ubcheck -> Upper Bound Date check
+	#target -> final results of Lower Bound Date check (see further down in the subroutine)
+	my @ubcheckprocarchtables;
+	my @ubcheckfilearchtables;
+	my @ubchecknetarchtables;
+	my @targetprocarchtables;
 	my @targetfilearchtables;
 	my @targetnetarchtables;
+
 	
 	#Are the requested data in time range with what is stored in the RDBMS
 	my $answer=check_requested_data_time_range($usertoprocess,$rpday,$rpmonth,$rpyear,$rphour,$rpmin,$rpsec,$rlday,$rlmonth,$rlyear,$rlhour,$rlmin,$rlsec);
@@ -351,8 +452,6 @@ sub get_requested_data_time_range {
         	my @mynarchtables=$hostservh->tables('', $ldb, 'archnetinfo%', 'TABLE');
 
 		
-		my @finalparchtables;
-
 		foreach my $currentptable (@myparchtables) {
 			#Now we have to get the dates and times of the first and last piece of data
         		#Select the firstand last row of the current archpsinfo table 
@@ -371,53 +470,58 @@ sub get_requested_data_time_range {
         		#Listifying the @ldata array
         		my ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
 
-		
-			#Are the requested rldata greater or equally recent than the stored dldata?
-			#If yes, push the table into the finalparchtables array
-        		my $dldata = DateTime->new(
-                		year      => $lyear,
-                		month     => $lmonth,
-                		day       => $lday,
-                		hour      => $lhour,
-                		minute    => $lmin,
-                		second    => $lsec,
-        		);
-
-        		my $rldata = DateTime->new(
-                		year      => $rlyear,
-                		month     => $rlmonth,
-                		day       => $rlday,
-                		hour      => $rlhour,
-                		minute    => $rlmin,
-                		second    => $rlsec,
-        		);
-
-        		my $ldelta = $rldata->subtract_datetime($dldata);
-
-        		my $lstatus = DateTime::Format::Duration->new(pattern => '%Y,%m,%e,%H,%M,%S');
-
-        		my @cld=split(',', $lstatus->format_duration($ldelta));
-        		my $negcld=0;
-        		foreach (@cld) {
-                		if (!($_ >=0)) { $negcld=$negcld+1; };
-        		}
-			
-			print "Debug: negcpd is negcpd and negcld is $negcld \n";
-
-        		#Finally conclude if we do not have negative delta on either of the two checks we are OK
-       			#otherwise we are NOT
-        		if ( $negcld=="0") {
-                		push(@finalparchtables,$currentptable);
-        		} else {
-				##Do nothing
-        		}
+			#First stage of the two stage algorithm check (Upper and Lower Bound Date check)
+			#Checking the Upper Bound Date first:
+			#Is the requested last date after the last date of the current table?
+			#If yes, push the table into the ubcheckprocarchtables array
+			my $ubcheck=date_is_later_than($lday,$lmonth,$lyear,$lhour,$lmin,$lsec,$rlday,$rlmonth,$rlyear,$rlhour,$rlmin,$rlsec);
+			if ( $ubcheck eq "True") {
+				print "ubcheck: date_is_later than returned True, so we push $currentptable \n";
+				push(@ubcheckprocarchtables, $currentptable);
+			} elsif ( $ubcheck eq "False") {
+				print "ubcheck: date_is_later than returned False, so we push $currentptable and exit the loop \n";
+				push(@ubcheckprocarchtables, $currentptable);
+				last;
+			}	
 
 		     
 
-		} #End of foreach my $currentptable (@@myparchtables)
+		} #End of foreach my $currentptable (@myparchtables)
+
+		#Having the @ubcheckprocarchtables Upper Bound check array populated, we start the Lower Bound detection
+		#by reversing that array to start working from its last element.
+		my @revubcheckprocarchtables=reverse(@ubcheckprocarchtables); 
+		my @lastptoreverse;
+		foreach my $currentrevtable (@revubcheckprocarchtables) {
+			$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentrevtable LIMIT 1" );
+                        $SQLh->execute();
+                        my @revpdata=$SQLh->fetchrow_array();
+
+			#Listifying the @pdata array
+                        my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@revpdata[0..$#revpdata];
+
+			#Second stage of the two stage algorithm check (Upper and Lower Bound Date check)
+			#Checking the Lower Bound Date now:
+			#Is the requested primary date earlier that the primary date of this table?
+			#If yes push the table into the @targetprocarchtables array
+			my $lbcheck=date_is_earlier_than($pday,$pmonth,$pyear,$phour,$pmin,$psec,$rpday,$rpmonth,$rpyear,$rphour,$rpmin,$rpsec);
+			if ( $lbcheck eq "True") {
+				print "lbcheck: date_is_earlier_than returned True, so we push $currentrevtable \n";
+				push(@lastptoreverse, $currentrevtable);
+			} elsif ( $lbcheck eq "False") {
+				push(@lastptoreverse, $currentrevtable);
+				print "lbcheck: date_is_earlier_than returned False, so we push $currentrevtable and exit the loop \n";
+				last;
+			}
+		
+		}
+
 	
-		print "Debug: finalparchtables is  @finalparchtables \n";
-		return @finalparchtables;
+		#Reverse to the final array that we are going to return
+		@targetprocarchtables=reverse(@lastptoreverse);
+
+		print "Debug: targetprocarchtables is  @targetprocarchtables \n";
+		return @targetprocarchtables;
 
 	} elsif ( $answer eq "False") {
 		#return an empty list of arrays
@@ -427,7 +531,7 @@ sub get_requested_data_time_range {
 	}
 
 
-} #End of get_requested_data_time_range	
+} #End of subroutine get_requested_data_time_range
 
 
 my ($pday,$pmonth,$pyear,$phour,$pmin,$psec,$lday,$lmonth,$lyear,$lhour,$lmin,$lsec)=find_data_time_range("bef5f0350b4a3395896f14d2926abcf5");
@@ -435,8 +539,15 @@ my ($pday,$pmonth,$pyear,$phour,$pmin,$psec,$lday,$lmonth,$lyear,$lhour,$lmin,$l
 my $answer=check_requested_data_time_range("bef5f0350b4a3395896f14d2926abcf5","02","02","2022","23","02","21","20","03","2022","02","55","44");
 print "Checking the requested date range returns : $answer \n";
 
-my $answer2=get_requested_data_time_range("bef5f0350b4a3395896f14d2926abcf5","19","03","2022","23","02","21","20","03","2022","02","58","42");
+my $answer2=get_requested_data_from_time_range("bef5f0350b4a3395896f14d2926abcf5","02","02","2022","23","02","21","04","02","2022","04","42","03");
 
+#Check date_is_later_than_or_equal
+my $datecheck1=date_is_later_than("02","02","2022","23","02","21","02","02","2022","23","02","21");
+print "datecheck1 is : $datecheck1 \n";
+
+#Check date_is_later than or equal
+my $datecheck2=date_is_earlier_than("02","02","2022","23","02","21","02","02","2022","23","02","22");
+print "datecheck2 is: $datecheck2 \n";
 
 print "Getting the requested data time range returns: $answer2 \n";
 print "$pday,$pmonth,$pyear,$phour,$pmin,$psec,$lday,$lmonth,$lyear,$lhour,$lmin,$lsec";
