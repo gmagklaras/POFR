@@ -179,26 +179,3 @@ foreach my $req (@requests) {
     
 }
 
-#Subroutines here
-
-sub timestamp {
-	#get the db authentication info
-        my @authinfo=getdbauth();
-        my ($username,$dbname,$dbpass,$hostname);
-
-        foreach my $dbentry (@authinfo) {
-                ($username,$dbname,$dbpass,$hostname)=split("," , $dbentry);
-        }
-
-        my $datasource="DBI:MariaDB:$dbname:$hostname";
-        my $itpslservh=DBI->connect ($datasource, $username, $dbpass, {RaiseError => 1, PrintError => 1});
-
-        my $SQLh=$itpslservh->prepare("select DATE_FORMAT(NOW(), '%Y-%m-%d-%k-%i-%s')");
-        $SQLh->execute();
-
-	my @timearray=$SQLh->fetchrow_array();
-	my ($year,$month,$day,$hour,$min,$sec)=split("-",$timearray[0]);
-	$SQLh->finish();
-	return ($year,$month,$day,$hour,$min,$sec);
-} #end of timestamp
-
