@@ -385,8 +385,10 @@ sub date_is_earlier_than {
 
 #sub get_requested_data_from_time_range: Provides a list of archtables from a requested/specified data time range
 #ACCEPTS: a username and a specified/requested time range
-#RETURNS: A list of arch relational tables for the requested time range, *if* the data exists
-#	  A empty list of arrays if the data does not exist or if there is another problem with the query 
+#RETURNS: -Three array references: \@targetprocarchtables, \@targetfilearchtables and \@targetnetarchtables, 
+#	   each containing the arch relational tables for the requested time range, *if* the data exists
+#	  -Three array references: \@targetprocarchtables, \@targetfilearchtables and \@targetnetarchtables,
+#	   each containing a simple element -1, if the data does not exist or if there is another problem with the query 
 sub get_requested_data_from_time_range {
 	my $usertoprocess=shift;
 	my $rpday=shift;
@@ -507,9 +509,9 @@ sub get_requested_data_from_time_range {
 			my $lbcheck=date_is_earlier_than($pday,$pmonth,$pyear,$phour,$pmin,$psec,$rpday,$rpmonth,$rpyear,$rphour,$rpmin,$rpsec);
 			if ( $lbcheck eq "True") {
 				print "lbcheck: date_is_earlier_than returned True, so we push $currentrevtable \n";
-				push(@lastptoreverse, $currentrevtable);
+				push (@lastptoreverse,shift(@revubcheckprocarchtables));
 			} elsif ( $lbcheck eq "False") {
-				push(@lastptoreverse, $currentrevtable);
+				push (@lastptoreverse,shift(@revubcheckprocarchtables));
 				print "lbcheck: date_is_earlier_than returned False, so we push $currentrevtable and exit the loop \n";
 				last;
 			}
@@ -521,14 +523,22 @@ sub get_requested_data_from_time_range {
 		@targetprocarchtables=reverse(@lastptoreverse);
 
 		print "Debug: targetprocarchtables is  @targetprocarchtables \n";
-		return @targetprocarchtables;
+		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
 
 	} elsif ( $answer eq "False") {
-		#return an empty list of arrays
+	        push (@targetprocarchtables, "NODATA");
+		push (@targetfilearchtables, "NODATA");
+		push (@targetnetarchtables, "NODATA");
+		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
 
 	} else {
-		#return an empty list of arrays
+		push (@targetprocarchtables, "ERROR");
+                push (@targetfilearchtables, "ERROR");
+                push (@targetnetarchtables, "ERROR");
+                return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
+
 	}
+
 
 
 } #End of subroutine get_requested_data_time_range
@@ -539,7 +549,7 @@ my ($pday,$pmonth,$pyear,$phour,$pmin,$psec,$lday,$lmonth,$lyear,$lhour,$lmin,$l
 my $answer=check_requested_data_time_range("bef5f0350b4a3395896f14d2926abcf5","02","02","2022","23","02","21","20","03","2022","02","55","44");
 print "Checking the requested date range returns : $answer \n";
 
-my $answer2=get_requested_data_from_time_range("bef5f0350b4a3395896f14d2926abcf5","02","02","2022","23","02","21","04","02","2022","04","42","03");
+my ($procref,$fileref,$netref)=get_requested_data_from_time_range("bef5f0350b4a3395896f14d2926abcf5","03","02","2022","20","32","01","03","02","2022","20","51","30");
 
 #Check date_is_later_than_or_equal
 my $datecheck1=date_is_later_than("02","02","2022","23","02","21","02","02","2022","23","02","21");
@@ -549,6 +559,6 @@ print "datecheck1 is : $datecheck1 \n";
 my $datecheck2=date_is_earlier_than("02","02","2022","23","02","21","02","02","2022","23","02","22");
 print "datecheck2 is: $datecheck2 \n";
 
-print "Getting the requested data time range returns: $answer2 \n";
+print "Getting the requested procdata time range returns: @$procref \n";
 print "$pday,$pmonth,$pyear,$phour,$pmin,$psec,$lday,$lmonth,$lyear,$lhour,$lmin,$lsec";
 
