@@ -29,12 +29,6 @@ package POFR;
 use strict;
 use warnings;
 use Exporter;
-#use DBI;
-#use Time::HiRes qw(usleep clock_gettime gettimeofday clock_getres CLOCK_REALTIME ITIMER_REAL ITIMER_VIRTUAL ITIMER_PROF ITIMER_REALPROF);
-#use IO::File;
-#use Getopt::Long;
-#use DateTime;
-#use DateTime::Format::Duration;
 
 our @ISA= qw( Exporter );
 
