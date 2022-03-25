@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range );
+our @EXPORT = qw( getdbauth timestamp find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range );
 
 
 #Subroutine definitions here
@@ -53,6 +53,27 @@ sub getdbauth {
         return @localarray;
 
 } #end of getdbauth()
+
+sub timestamp {
+        #get the db authentication info
+        my @authinfo=getdbauth();
+        my ($username,$dbname,$dbpass,$hostname);
+
+        foreach my $dbentry (@authinfo) {
+                ($username,$dbname,$dbpass,$hostname)=split("," , $dbentry);
+        }
+
+        my $timestampsource="DBI:MariaDB:$dbname:$hostname";
+        my $timestampservh=DBI->connect ($timestampsource, $username, $dbpass, {RaiseError => 1, PrintError => 1});
+
+        my $tsSQLh=$timestampservh->prepare("select DATE_FORMAT(NOW(), '%Y-%m-%d-%k-%i-%s')");
+        $tsSQLh->execute();
+
+        my @timearray=$tsSQLh->fetchrow_array();
+        my ($year,$month,$day,$hour,$min,$sec)=split("-",$timearray[0]);
+        $tsSQLh->finish();
+        return ($year,$month,$day,$hour,$min,$sec);
+} #end of timestamp
 
 sub iso8601_date {
   die unless $_[0] =~ m/^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)Z$/;
