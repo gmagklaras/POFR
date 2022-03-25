@@ -72,35 +72,35 @@ sub find_data_time_range {
 	($dbusername,$dbname,$dbpass,$hostname)=split("," , $dbentry);
 	}
 
-	my $datasource="DBI:MariaDB:$dbname:$hostname";
-	my $lhltservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
-	my $SQLh=$lhltservh->prepare("SELECT COUNT(*) FROM lhltable where ciduser='$usertoprocess'");
-	$SQLh->execute();
-	my @cidhits=$SQLh->fetchrow_array();
+	my $fdtrsource="DBI:MariaDB:$dbname:$hostname";
+	my $fdtrservh=DBI->connect ($fdtrsource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
+	my $fdtrSQLh=$fdtrservh->prepare("SELECT COUNT(*) FROM lhltable where ciduser='$usertoprocess'");
+	$fdtrSQLh->execute();
+	my @cidhits=$fdtrSQLh->fetchrow_array();
 	if ($cidhits[0] >= "1") {
         	print "finddatarange subroutine Status: Detected user $usertoprocess in the database...\n";
 	} else {
-        	$SQLh->finish();
+        	$fdtrSQLh->finish();
         	die "finddatarange subroutine Error: Could not detect user $usertoprocess in the database. Are you sure the lhltable is not out of sync? \n";
 	}
 
 	#Get the db name for that user
-	$SQLh=$lhltservh->prepare("SELECT cid FROM lhltable WHERE ciduser='$usertoprocess' ");
-	$SQLh->execute();
-	my @dbnamehits=$SQLh->fetchrow_array();
-	$SQLh->finish();
+	$fdtrSQLh=$fdtrservh->prepare("SELECT cid FROM lhltable WHERE ciduser='$usertoprocess' ");
+	$fdtrSQLh->execute();
+	my @dbnamehits=$fdtrSQLh->fetchrow_array();
+	$fdtrSQLh->finish();
 	my $ldb=$dbnamehits[0];
 	$ldb =~ s/-//g;
 
-	my $datasource="DBI:MariaDB:$ldb:$hostname";
-	my $hostservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
+	$fdtrsource="DBI:MariaDB:$ldb:$hostname";
+	my $hostservh=DBI->connect ($fdtrsource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
 	$hostservh->do('SET NAMES utf8mb4');
 
-	$SQLh=$hostservh->prepare("show tables LIKE 'archpsinfo%'");
-	$SQLh->execute();
+	$fdtrSQLh=$hostservh->prepare("show tables LIKE 'archpsinfo%'");
+	$fdtrSQLh->execute();
 
 	my @rangehits;
-	while ( my $row=$SQLh->fetchrow()) {
+	while ( my $row=$fdtrSQLh->fetchrow()) {
 		push (@rangehits,$row);
 	}
 
@@ -109,18 +109,18 @@ sub find_data_time_range {
         my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec);
         my ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec);
 
-        my $SQLh;
-        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $rangehits[0] LIMIT 1" );
-        $SQLh->execute();
-        my @pdata=$SQLh->fetchrow_array();
+        
+        $fdtrSQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $rangehits[0] LIMIT 1" );
+        $fdtrSQLh->execute();
+        my @pdata=$fdtrSQLh->fetchrow_array();
 
         #Listifying the @pdata array
         ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@pdata[0..$#pdata];
 
         #Then select the last record of the LAST archpsinfo table
-        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $rangehits[-1] ORDER BY psentity DESC LIMIT 1" );
-        $SQLh->execute();
-        my @ldata=$SQLh->fetchrow_array();
+        $fdtrSQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $rangehits[-1] ORDER BY psentity DESC LIMIT 1" );
+        $fdtrSQLh->execute();
+        my @ldata=$fdtrSQLh->fetchrow_array();
 
         #Listifying the @ldata array
         ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
@@ -467,7 +467,7 @@ sub get_requested_data_from_time_range {
         	my $ldb=$dbnamehits[0];
         	$ldb =~ s/-//g;
 
-        	my $datasource="DBI:MariaDB:$ldb:$hostname";
+        	$datasource="DBI:MariaDB:$ldb:$hostname";
         	my $hostservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
        		$hostservh->do('SET NAMES utf8mb4');
 
