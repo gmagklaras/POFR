@@ -388,7 +388,8 @@ sub date_is_earlier_than {
 #RETURNS: -Three array references: \@targetprocarchtables, \@targetfilearchtables and \@targetnetarchtables, 
 #	   each containing the arch relational tables for the requested time range, *if* the data exists
 #	  -Three array references: \@targetprocarchtables, \@targetfilearchtables and \@targetnetarchtables,
-#	   each containing a simple element -1, if the data does not exist or if there is another problem with the query 
+#	   each containing a single "NODATA" OR "ERROR" element, depending on whether the data does not exist 
+#	   or if there is another problem with the query.
 sub get_requested_data_from_time_range {
 	my $usertoprocess=shift;
 	my $rpday=shift;
@@ -594,16 +595,90 @@ sub get_requested_data_from_time_range {
 
                 print "Debug: targetfilearchtables is  @targetfilearchtables \n";
 
+		#Processing/filtering of the relevant network tables
+		foreach my $currentntable (@mynarchtables) {
+			#First record of the current table
+                        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentntable LIMIT 1" );
+                        $SQLh->execute();
+                        my @ndata=$SQLh->fetchrow_array();
 
+			#Listifying the @ndata array
+                        my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@ndata[0..$#ndata];
+
+			#Then select the last record of the current table
+                        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentntable ORDER BY endpointinfo DESC LIMIT 1" );
+                        $SQLh->execute();
+                        my @ldata=$SQLh->fetchrow_array();
+
+			#Listifying the @ldata array
+                        my ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
+			
+			#First stage of the two stage algorithm check (Upper and Lower Bound Date check)
+                        #Checking the Upper Bound Date first:
+                        #Is the requested last date after the last date of the current table?
+                        #If yes, push the table into the ubcheckprocarchtables array
+                        my $ubcheck=date_is_later_than($lday,$lmonth,$lyear,$lhour,$lmin,$lsec,$rlday,$rlmonth,$rlyear,$rlhour,$rlmin,$rlsec);
+			if ( $ubcheck eq "True") {
+                                print "ubcheck: date_is_later than returned True, so we push $currentntable \n";
+                                push(@ubchecknetarchtables, $currentntable);
+                        } elsif ( $ubcheck eq "False") {
+                                print "ubcheck: date_is_later than returned False, so we push $currentntable  and exit the loop \n";
+                                push(@ubchecknetarchtables, $currentntable);
+                                last;
+                        }
+
+		} #End of foreach my $currentntable (@mynarchtables)
+
+		#Having the @ubchecknetarchtables Upper Bound check array populated, we start the Lower Bound detection
+                #by reversing that array to start working from its last element.
+                my @revubchecknetarchtables=reverse(@ubchecknetarchtables);
+                my @lastntoreverse;
+
+		foreach my $currentnrevtable (@revubchecknetarchtables) {
+			$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentnrevtable LIMIT 1" );
+                        $SQLh->execute();
+                        my @revndata=$SQLh->fetchrow_array();
+
+                        #Listifying the @revndata array
+                        my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@revndata[0..$#revndata];
+			
+			#Second stage of the two stage algorithm check (Upper and Lower Bound Date check)
+                        #Checking the Lower Bound Date now:
+                        #Is the requested primary date earlier that the primary date of this table?
+                        #If yes push the table into the @targetprocarchtables array
+                        my $lbcheck=date_is_earlier_than($pday,$pmonth,$pyear,$phour,$pmin,$psec,$rpday,$rpmonth,$rpyear,$rphour,$rpmin,$rpsec);
+			if ( $lbcheck eq "True") {
+                                print "lbcheck: date_is_earlier_than returned True, so we push $currentnrevtable \n";
+                                push (@lastntoreverse,shift(@revubchecknetarchtables));
+                        } elsif ( $lbcheck eq "False") {
+                                push (@lastntoreverse,shift(@revubchecknetarchtables));
+                                print "lbcheck: date_is_earlier_than returned False, so we push $currentnrevtable and exit the loop \n";
+                                last;
+                        }
+
+			
+		} #End of foreach my $currentnrevtable (@revubchecknetarchtables)
+
+		#Reverse to the final array that we are going to return
+                @targetnetarchtables=reverse(@lastntoreverse);
+
+                print "Debug: targetnetarchtables is  @targetnetarchtables \n";
+
+		
+		#Return a list containing the three array references
 		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
 
 	} elsif ( $answer eq "False") {
+		#Here we have had no data in range, because check_requested_data_time_range()
+		#claimed the request was out of range.
 	        push (@targetprocarchtables, "NODATA");
 		push (@targetfilearchtables, "NODATA");
 		push (@targetnetarchtables, "NODATA");
 		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
 
 	} else {
+		#Here we probably have a malformed query, because check_requested_data_time_range()
+                #claimed something else was wrong.
 		push (@targetprocarchtables, "ERROR");
                 push (@targetfilearchtables, "ERROR");
                 push (@targetnetarchtables, "ERROR");
