@@ -449,11 +449,12 @@ sub get_requested_data_from_time_range {
         	my $hostservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
        		$hostservh->do('SET NAMES utf8mb4');
 
+		#Sense what do we have in the data store
 		my @myparchtables=$hostservh->tables('', $ldb, 'archpsinfo%', 'TABLE');
 		my @myfarchtables=$hostservh->tables('', $ldb, 'archfileinfo%', 'TABLE');
         	my @mynarchtables=$hostservh->tables('', $ldb, 'archnetinfo%', 'TABLE');
 
-		
+		#Selection/filtering of the relevant proctables
 		foreach my $currentptable (@myparchtables) {
 			#Now we have to get the dates and times of the first and last piece of data
         		#Select the firstand last row of the current archpsinfo table 
@@ -518,11 +519,82 @@ sub get_requested_data_from_time_range {
 		
 		}
 
-	
+		
 		#Reverse to the final array that we are going to return
 		@targetprocarchtables=reverse(@lastptoreverse);
 
 		print "Debug: targetprocarchtables is  @targetprocarchtables \n";
+		
+		#Processing/filtering of the relevant file tables
+		foreach my $currentftable (@myfarchtables) {
+			#First record of the current table
+			$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentftable LIMIT 1" );
+                        $SQLh->execute();
+                        my @fdata=$SQLh->fetchrow_array();
+
+			#Listifying the @fdata array
+                        my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@fdata[0..$#fdata];
+
+			#Then select the last record of the current table
+                        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentftable ORDER BY fileaccessid DESC LIMIT 1" );
+                        $SQLh->execute();
+                        my @ldata=$SQLh->fetchrow_array();
+
+			#Listifying the @ldata array
+                        my ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
+
+			#First stage of the two stage algorithm check (Upper and Lower Bound Date check)
+                        #Checking the Upper Bound Date first:
+                        #Is the requested last date after the last date of the current table?
+                        #If yes, push the table into the ubcheckprocarchtables array
+                        my $ubcheck=date_is_later_than($lday,$lmonth,$lyear,$lhour,$lmin,$lsec,$rlday,$rlmonth,$rlyear,$rlhour,$rlmin,$rlsec);
+			if ( $ubcheck eq "True") {
+                                print "ubcheck: date_is_later than returned True, so we push $currentftable \n";
+                                push(@ubcheckfilearchtables, $currentftable);
+                        } elsif ( $ubcheck eq "False") {
+                                print "ubcheck: date_is_later than returned False, so we push $currentftable  and exit the loop \n";
+                                push(@ubcheckfilearchtables, $currentftable);
+                                last;
+                        }
+
+
+		} #End of foreach my $currentftable (@myfarchtables)
+
+		#Having the @ubcheckfilearchtables Upper Bound check array populated, we start the Lower Bound detection
+                #by reversing that array to start working from its last element.
+		my @revubcheckfilearchtables=reverse(@ubcheckfilearchtables);
+                my @lastftoreverse;
+
+		foreach my $currentfrevtable (@revubcheckfilearchtables) {
+                        $SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from $currentfrevtable LIMIT 1" );
+                        $SQLh->execute();
+                        my @revfdata=$SQLh->fetchrow_array();
+
+                        #Listifying the @revfdata array
+                        my ($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@revfdata[0..$#revfdata];
+
+                        #Second stage of the two stage algorithm check (Upper and Lower Bound Date check)
+                        #Checking the Lower Bound Date now:
+                        #Is the requested primary date earlier that the primary date of this table?
+                        #If yes push the table into the @targetprocarchtables array
+                        my $lbcheck=date_is_earlier_than($pday,$pmonth,$pyear,$phour,$pmin,$psec,$rpday,$rpmonth,$rpyear,$rphour,$rpmin,$rpsec);
+                        if ( $lbcheck eq "True") {
+                                print "lbcheck: date_is_earlier_than returned True, so we push $currentfrevtable \n";
+                                push (@lastftoreverse,shift(@revubcheckfilearchtables));
+                        } elsif ( $lbcheck eq "False") {
+                                push (@lastftoreverse,shift(@revubcheckfilearchtables));
+                                print "lbcheck: date_is_earlier_than returned False, so we push $currentfrevtable and exit the loop \n";
+                                last;
+                        }
+
+                }
+
+		#Reverse to the final array that we are going to return
+                @targetfilearchtables=reverse(@lastftoreverse);
+
+                print "Debug: targetfilearchtables is  @targetfilearchtables \n";
+
+
 		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
 
 	} elsif ( $answer eq "False") {
