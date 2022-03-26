@@ -461,21 +461,20 @@ sub archivetables {
         my ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec);
 
 	#Get the first (pdata) and the last dates and times of the merged psinfodata
-	$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from psinfo LIMIT 1" );
+	$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from psinfo ORDER BY chour,cmin,csec,cmsec LIMIT 1" );
         $SQLh->execute();
         my @pdata=$SQLh->fetchrow_array();
 
 	#Listifying the @pdata array
 	($pyear,$pmonth,$pday,$phour,$pmin,$psec,$pmsec)=@pdata[0..$#pdata];
 
-	$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from psinfo" );
-        $SQLh->execute();
-        my @ldata;
+	$SQLh=$hostservh->prepare("SELECT cyear,cmonth,cday,chour,cmin,csec,cmsec from psinfo ORDER BY chour DESC,cmin DESC,csec DESC LIMIT 1" );
+	$SQLh->execute();
+        my @ldata=$SQLh->fetchrow_array();
 
-        while (@ldata=$SQLh->fetchrow_array()) {
-		#Listifying the @ldata array
-		($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
-        }
+        #Listifying the @ldata array
+        ($lyear,$lmonth,$lday,$lhour,$lmin,$lsec,$lmsec)=@ldata[0..$#ldata];
+
 
 	#We need to padd certain vars with zeros so that they have two digit length
 	#so that the output of SHOW TABLES is numerically sorted properly
@@ -512,11 +511,11 @@ sub archivetables {
 	
 	#Export the data into CSV files residing in RAM;
 	#obviously the order we SQL select the fields is important and needs to match that on of the table definition ( see @archivesql)
-	$SQLh=$hostservh->prepare("SELECT psentity,shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dmin,dsec,dmsec INTO OUTFILE '$pdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from psinfo");
+	$SQLh=$hostservh->prepare("SELECT psentity,shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dmin,dsec,dmsec INTO OUTFILE '$pdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from psinfo ORDER BY chour,cmin,csec,cmsec");
 	$SQLh->execute();
-	$SQLh=$hostservh->prepare("SELECT fileaccessid,shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dsec,dmin,dmsec INTO OUTFILE '$fdatafile' CHARACTER SET utf8mb4 FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from fileinfo");
+	$SQLh=$hostservh->prepare("SELECT fileaccessid,shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dsec,dmin,dmsec INTO OUTFILE '$fdatafile' CHARACTER SET utf8mb4 FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from fileinfo ORDER BY chour,cmin,csec,cmsec");
 	$SQLh->execute();
-	$SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum,country,city INTO OUTFILE '$netdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from netinfo");
+	$SQLh=$hostservh->prepare("SELECT endpointinfo,cyear,cmonth,cday,chour,cmin,csec,cmsec,tzone,transport,sourceip,sourcefqdn,sourceport,destip,destfqdn,destport,ipversion,pid,uid,inode,dyear,dmonth,dday,dhour,dmin,dsec,dmsec,shasum,country,city INTO OUTFILE '$netdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from netinfo ORDER BY chour,cmin,csec,cmsec");
 	$SQLh->execute();
 
 	print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Exported the data into CSV files residing in RAM \n";
