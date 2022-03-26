@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth timestamp find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range );
+our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range );
 
 
 #Subroutine definitions here
@@ -73,7 +73,28 @@ sub timestamp {
         my ($year,$month,$day,$hour,$min,$sec)=split("-",$timearray[0]);
         $tsSQLh->finish();
         return ($year,$month,$day,$hour,$min,$sec);
-} #end of timestamp
+} #end of timestamp subroutine
+
+sub table_exists {
+    my $db = shift;
+    my $table = shift;
+    my @tables = $db->tables('','','','TABLE');
+    if (@tables) {
+        for (@tables) {
+            next unless $_;
+            return 1 if $_ eq $table
+        }
+    }
+    else {
+        eval {
+            local $db->{PrintError} = 0;
+            local $db->{RaiseError} = 1;
+            $db->do(qq{SELECT * FROM $table WHERE 1 = 0 });
+        };
+        return 1 unless $@;
+    }
+    return 0;
+} #End of table_exists subroutine
 
 sub iso8601_date {
   die unless $_[0] =~ m/^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)Z$/;
