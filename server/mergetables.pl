@@ -182,27 +182,6 @@ if ( ($fileinfocounts[0] >= $archiveint) || ( $ptablesnumber >= $ptablenlimit) )
 
 
 #Subroutines here
-sub table_exists {
-    my $db = shift;
-    my $table = shift;
-    my @tables = $db->tables('','','','TABLE');
-    if (@tables) {
-        for (@tables) {
-            next unless $_;
-            return 1 if $_ eq $table
-        }
-    }
-    else {
-        eval {
-            local $db->{PrintError} = 0;
-            local $db->{RaiseError} = 1;
-            $db->do(qq{SELECT * FROM $table WHERE 1 = 0 });
-        };
-        return 1 unless $@;
-    }
-    return 0;
-} #End of table_exists
-
 #Subroutine mergetables
 sub mergetables {
 	#Fetch the userid and dbname parameter names
