@@ -1,4 +1,4 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1 -I ../lib
 ##
 use lib '../pofrperl/lib/site_perl/5.34.1';
 
@@ -29,6 +29,7 @@ use lib '../pofrperl/lib/site_perl/5.34.1';
 #with this program; if not, write to the Free Software Foundation, Inc.,
 #51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use POFR;
 use strict;
 use warnings;
 use feature 'unicode_strings';
@@ -148,47 +149,6 @@ foreach my $data (@activeusers) {
 	
 
 #Subroutines here
-sub getdbauth {
-	#DBAUTH path hardwired only on the server side
-	unless(open DBAUTH, "<./.adb.dat") {
-			die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
-		}
-
-	my @localarray;	
-	
-	while (<DBAUTH>) {
-		my $dbentry=$_;
-		chomp($dbentry);
-		push(@localarray, $dbentry);
-	}
-
-	return @localarray;	
-	
-} #end of getdbauth() 
-
-sub timestamp {
-        my $epoch=shift;
-        my $time_zone=shift;
-	
-	#The epoch value we get is epoch plus msec. The msec value needs to come off.
-	my $epochminusmsec=substr $epoch,0,10;
-
-        my $dt=DateTime->from_epoch( epoch => $epochminusmsec );
-	#Here we set the time zone acquired from the POFR client
-	#to ensure that we report the time/hour on the server properly.
-	$dt->set_time_zone( $time_zone );
-        
-	my $calcyear=$dt->year;
-        my $calcmonth=$dt->month;
-        my $day_of_month=$dt->day;
-        my $calchour=$dt->hour;
-        my $calcmin=$dt->minute;
-        my $calcsec=$dt->second;
-
-        return ($calcyear,$calcmonth,$day_of_month,$calchour,$calcmin,$calcsec);
-
-} #end of timestamp
-
 sub filerefprocess {
 	#Processes the first file of a thread and produces the reference file
 	my $fitopr=shift;
@@ -986,27 +946,6 @@ sub determinepreviousthread {
 	return ($previousfts,$previouslts,$threadnum,$firstthreadfts,$firstthreadlts);
 
 } #End of determinepreviousthread
-
-sub table_exists {
-    my $db = shift;
-    my $table = shift;
-    my @tables = $db->tables('','','','TABLE');
-    if (@tables) {
-        for (@tables) {
-            next unless $_;
-            return 1 if $_ eq $table
-        }
-    }
-    else {
-        eval {
-            local $db->{PrintError} = 0;
-            local $db->{RaiseError} = 1;
-            $db->do(qq{SELECT * FROM $table WHERE 1 = 0 });
-        };
-        return 1 unless $@;
-    }
-    return 0;
-} #End of table_exists
 
 sub sanitize_filename {
 
