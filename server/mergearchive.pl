@@ -1,4 +1,4 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.34.1/x86_64-linux -I ../pofrperl/lib/5.34.1 -I ../lib
 ###
 use lib '../pofrperl/lib/site_perl/5.34.1';
 
@@ -28,6 +28,7 @@ use lib '../pofrperl/lib/site_perl/5.34.1';
 #with this program; if not, write to the Free Software Foundation, Inc.,
 #51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use POFR;
 use strict;
 use warnings;
 use DBI;
@@ -145,23 +146,6 @@ if ( $ptablesnumber >= 2 ) {
 	
 
 #Subroutine definitions here
-sub getdbauth {
-        unless(open DBAUTH, "<./.adb.dat") {
-                die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
-                }
-
-        my @localarray;
-
-        while (<DBAUTH>) {
-                my $dbentry=$_;
-                chomp($dbentry);
-                push(@localarray, $dbentry);
-        }
-
-        return @localarray;
-
-} #end of getdbauth()
-
 sub producearchive {
 	#Fetch the userid and dbname parameter names
 	my $usertomerge=shift;
