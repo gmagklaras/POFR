@@ -64,9 +64,9 @@ my ($fromday,$frommonth,$fromyear,$fromhour,$frommin,$fromsec,$today,$tomonth,$t
 my $helpflag;
 
 sub dispusage {
-        print "Usage:   mergearchive.pl --usertomerge=USER_TO_MERGE --tspec=y|n [--fromday=dd --frommonth=mm --fromyear=yyyy -fromhour=hh --frommin=mm --fromsec=ss --today=dd --tomonth=mm --toyear=yyyy --tohour=hh --tomin=mm --tosec=ss] \n";
-        print "Example 1: mergearchive.pl --usertomerge=23b24050a74006f0f8d4f8b851bf454f --datespec=n \n";
-	print "Example 2: mergearchive.pl --usertomerge=23b24050a74006f0f8d4f8b851bf454f --datespec=y --fromday=01 --frommonth=01 --fromyear=2022 --fromhour=00 --frommin=01 --fromsec=00 --today=02 --tomonth=02 --toyear=2022 --tohour=23 --tomin=45 --tosec=59 \n";
+        print "Usage:   mergearchive.pl USER_TO_MERGE --tspec=y|n [--fromday=dd --frommonth=mm --fromyear=yyyy -fromhour=hh --frommin=mm --fromsec=ss --today=dd --tomonth=mm --toyear=yyyy --tohour=hh --tomin=mm --tosec=ss] \n";
+        print "Example 1: mergearchive.pl 23b24050a74006f0f8d4f8b851bf454f --datespec=n \n";
+	print "Example 2: mergearchive.pl 23b24050a74006f0f8d4f8b851bf454f --datespec=y --fromday=01 --frommonth=01 --fromyear=2022 --fromhour=00 --frommin=01 --fromsec=00 --today=02 --tomonth=02 --toyear=2022 --tohour=23 --tomin=45 --tosec=59 \n";
         exit;
 }
 
