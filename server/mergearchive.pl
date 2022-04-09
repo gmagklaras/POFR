@@ -35,6 +35,9 @@ use DBI;
 use Time::HiRes qw(usleep clock_gettime gettimeofday clock_getres CLOCK_REALTIME ITIMER_REAL ITIMER_VIRTUAL ITIMER_PROF ITIMER_REALPROF);
 use IO::File;
 use Getopt::Long;
+use DateTime;
+use DateTime::Format::Duration;
+
 
 #Sanity checks
 #
@@ -52,15 +55,35 @@ if (!(-e "/usr/sbin/getenforce")) {
 
 my $usertoprocess=shift;
 
+#Do we want to specify date and time?
+my $tspec;
+
+#If we specify a date this is how we can specify it:
+my ($fromday,$frommonth,$fromyear,$fromhour,$frommin,$fromsec,$today,$tomonth,$toyear,$tohour,$tomin,$tosec);
+
 my $helpflag;
 
 sub dispusage {
-        print "Usage:   mergearchive.pl USER_TO_MERGE \n";
-        print "Example: mergearchive.pl 23b24050a74006f0f8d4f8b851bf454f \n";
+        print "Usage:   mergearchive.pl --usertomerge=USER_TO_MERGE --tspec=y|n [--fromday=dd --frommonth=mm --fromyear=yyyy -fromhour=hh --frommin=mm --fromsec=ss --today=dd --tomonth=mm --toyear=yyyy --tohour=hh --tomin=mm --tosec=ss] \n";
+        print "Example 1: mergearchive.pl --usertomerge=23b24050a74006f0f8d4f8b851bf454f --datespec=n \n";
+	print "Example 2: mergearchive.pl --usertomerge=23b24050a74006f0f8d4f8b851bf454f --datespec=y --fromday=01 --frommonth=01 --fromyear=2022 --fromhour=00 --frommin=01 --fromsec=00 --today=02 --tomonth=02 --toyear=2022 --tohour=23 --tomin=45 --tosec=59 \n";
         exit;
 }
 
 GetOptions("usertomerge=s" => \$usertoprocess,
+	   "tspec=s" => \$tspec,
+	   "fromday=s" => \$fromday,
+	   "frommonth=s" => \$frommonth, 
+	   "fromyear=s" => \$fromyear,
+	   "fromhour=s" => \$fromhour,
+	   "frommin=s" => \$frommin,
+	   "fromsec=s" => \$fromsec,
+	   "today=s" => \$today,
+           "tomonth=s" => \$tomonth,
+           "toyear=s" => \$toyear,
+           "tohour=s" => \$tohour,
+           "tomin=s" => \$tomin,
+           "tosec=s" => \$tosec,
            "help" => \$helpflag );
 
 
@@ -68,9 +91,32 @@ if ($helpflag) {
         dispusage;
 }
 
+#Command line argument sanity checks
 if (! (defined($usertoprocess))) {
 	print "mergearchive.pl Error: The user argument is not defined. I shall exit and do nothing! \n";
         dispusage();
+}
+
+if (! (defined($tspec))) {
+	print "mergearchive.pl Error: The tspec argument is not defined. I shall exit and do nothing! \n";
+	dispusage();
+}
+
+if (($tspec ne 'y') && ($tspec ne 'n')) {
+	print "mergearchive.pl Error: The specified tspec argument is invalid. Please choose tspec=y OR tspec=n \n";
+        dispusage();
+}
+
+if (($tspec eq 'y') && !( (defined($fromday)) && (defined($frommonth)) && (defined($fromyear)) && (defined($fromhour)) && (defined($frommin)) && (defined($fromsec)) 
+	                  && (defined($today)) && (defined($tomonth)) && (defined($toyear)) && (defined($tohour)) && (defined($tomin)) && (defined($tosec)) )) {
+	print "mergearchive.pl Error: You specified --tspec=y but it does not seem you specified all the necessary date and time arguments. Check again please. \n";
+	dispusage();
+}
+
+if (($tspec eq 'n') && ( (defined($fromday)) || (defined($frommonth)) || (defined($fromyear)) || (defined($fromhour)) || (defined($frommin)) || (defined($fromsec))
+                          || (defined($today)) || (defined($tomonth)) || (defined($toyear)) || (defined($tohour)) || (defined($tomin)) || (defined($tosec)) )) {
+	print "mergearchive.pl Error: You specified --tspec=n but you also defined elements of date and time range. That does not make sense. Please try again. \n";
+	dispusage();
 }
 
 #Sanity check - Does the user exist in the database?
@@ -110,6 +156,31 @@ if (!( -e "/home/$usertoprocess/.archmerge") && !(-e "/home/$usertoprocess/.merg
 	$SQLh->finish();
 	die "mergearchives.pl Error: Cannot continue work on user $usertoprocess because I detected merge OR archmerge flags. Please wait until current ops finish or check it out please! \n";
 }
+
+#Sanity check - If a specified date and time range was specified, is it within the range of the data we have in store?
+if ( $tspec eq "y") {
+	my $rangecheck=check_requested_data_time_range($usertoprocess,$fromday,$frommonth,$fromyear,$fromhour,$frommin,$fromsec,$today,$tomonth,$toyear,$tohour,$tomin,$tosec);
+	if ($rangecheck eq "True") {
+		print "mergearchive.pl STATUS: Requested date and time range seems to be available. Proceeding to retrieve the following data for user $usertoprocess: \n";
+		print "mergearchive.pl STATUS: FROM Day:$fromday/Month:$frommonth/Year:$fromyear: $fromhour:$frommin:$fromsec \n";
+		print "mergearchive.pl STATUS: TO   Day:$today/Month:$tomonth/Year:$toyear: $tohour:$tomin:$tosec \n";	
+	} elsif ($rangecheck eq "False") {
+	        print "mergearchive.pl Error: You are out of luck. Requested time range is not available. We do not have the requested data in store for user $usertoprocess: \n";
+		print "mergearchive.pl Error: FROM Day:$fromday/Month:$frommonth/Year:$fromyear: $fromhour:$frommin:$fromsec \n";
+		print "mergerachive.pl Error: TO   Day:$today/Month:$tomonth/Year:$toyear: $tohour:$tomin:$tosec \n";
+		$SQLh->finish();
+		unlink "/home/$usertoprocess/.archmerge";
+		die "mergearchives.pl Error: I shall exit and do nothing! \n";
+	} else {
+		print "mergearchive.pl Error: The date and time query for user $usertoprocess is malformed. Query data: \n";      
+                print "mergearchive.pl Error: FROM Day:$fromday/Month:$frommonth/Year:$fromyear: $fromhour:$frommin:$fromsec \n";
+                print "mergerachive.pl Error: TO   Day:$today/Month:$tomonth/Year:$toyear: $tohour:$tomin:$tosec \n";
+		$SQLh->finish();
+		unlink "/home/$usertoprocess/.archmerge";
+                die "mergearchives.pl Error: I shall exit and do nothing! \n";  
+	}
+} #End of if ( $tspec eq "y")
+		
 
 #Get the db name for that user
 $SQLh=$lhltservh->prepare("SELECT cid FROM lhltable WHERE ciduser='$usertoprocess' ");
@@ -213,9 +284,32 @@ sub producearchive {
         my $hostservh=DBI->connect ($datasource, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
         $hostservh->do('SET NAMES utf8mb4');
 
-	my @myparchtables=$hostservh->tables('', $ldb, 'archpsinfo%', 'TABLE');
-	my @myfarchtables=$hostservh->tables('', $ldb, 'archfileinfo%', 'TABLE');
-	my @mynarchtables=$hostservh->tables('', $ldb, 'archnetinfo%', 'TABLE');
+	#The arrays that will hold the archive tables we are going to fuse/merge 
+        my @myparchtables;
+	my @myfarchtables;
+	my @mynarchtables;
+
+	#Did we specify a date and time range? If yes, include a subset of the tables as specified in the time range
+	#If not, include everything that is stored for that user
+	if ($tspec eq "y") {
+		my ($procref,$fileref,$netref)=get_requested_data_from_time_range($usertomerge,$fromday,$frommonth,$fromyear,$fromhour,$frommin,$fromsec,$today,$tomonth,$toyear,$tohour,$tomin,$tosec);
+		foreach my $mp (@$procref) {
+			push (@myparchtables, $mp);
+		}
+		
+		foreach my $mf (@$fileref) {
+			push (@myfarchtables, $mf);
+		}
+
+		foreach my $mn (@$netref) {
+			push (@mynarchtables, $mn);
+		}
+
+	} else {
+		@myparchtables=$hostservh->tables('', $ldb, 'archpsinfo%', 'TABLE');
+		@myfarchtables=$hostservh->tables('', $ldb, 'archfileinfo%', 'TABLE');
+		@mynarchtables=$hostservh->tables('', $ldb, 'archnetinfo%', 'TABLE');
+	}
 	
 	#Now we have to get the dates and times of the first and last piece of data
 	#Select the first row of the first archpsinfo table
