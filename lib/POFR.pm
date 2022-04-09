@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range );
+our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread );
 
 
 #Subroutine definitions here
@@ -752,6 +752,246 @@ sub get_requested_data_from_time_range {
 
 
 } #End of subroutine get_requested_data_time_range
+
+
+#sub determinepreviousthread: Determines the previous thread, to provide thread marshaling/synchronization
+#ACCEPTS: -a POFR username, and 
+#         -the current thread first time stamp (fts), 
+#SETS   : -the previous thread first time stamp (fts), 
+#         -the previous thread last time stamp (lts), 
+#         -the thread number (indicating thread order, 1-32, 1 is the first thread), 
+#         -the first thread first time stamp fts, 
+#         -the first thread last time stamp lts  
+sub determinepreviousthread {
+        my $user=shift;
+        my $currentfts=shift;
+        my $previousfts;
+        my $previouslts;
+        my $threadnum;
+        my $firstthreadfts;
+        my $firstthreadlts;
+
+        opendir(THORDER, "/home/$user/proc") || die "parseproc.pl (inside determineprevioustimestamps function) Error: can't open user directory /home/$user/proc to perform thread ordering due to : $!";
+        my @threadirs = sort grep { /^[1-9][0-9]*\-[1-9][0-9]/ } readdir(THORDER);
+        my @timestampsarray;
+        foreach my $tdir (@threadirs) {
+                push @timestampsarray, split "-",$tdir;
+        } #end of foreach my $tdir
+
+
+        my @threadfts=($timestampsarray[0],$timestampsarray[2],$timestampsarray[4],$timestampsarray[6],$timestampsarray[8],$timestampsarray[10],$timestampsarray[12],$timestampsarray[14],$timestampsarray[16],$timestampsarray[18],$timestampsarray[20],$timestampsarray[22],$timestampsarray[24],$timestampsarray[26],$timestampsarray[28],$timestampsarray[30],$timestampsarray[32],$timestampsarray[34],$timestampsarray[36],$timestampsarray[38],$timestampsarray[40],$timestampsarray[42],$timestampsarray[44],$timestampsarray[46],$timestampsarray[48],$timestampsarray[50],$timestampsarray[52],$timestampsarray[54],$timestampsarray[56],$timestampsarray[58],$timestampsarray[60],$timestampsarray[62]);
+        my @threadlts=($timestampsarray[1],$timestampsarray[3],$timestampsarray[5],$timestampsarray[7],$timestampsarray[9],$timestampsarray[11],$timestampsarray[13],$timestampsarray[15],$timestampsarray[17],$timestampsarray[19],$timestampsarray[21],$timestampsarray[23],$timestampsarray[25],$timestampsarray[27],$timestampsarray[29],$timestampsarray[31],$timestampsarray[33],$timestampsarray[35],$timestampsarray[37],$timestampsarray[39],$timestampsarray[41],$timestampsarray[43],$timestampsarray[45],$timestampsarray[47],$timestampsarray[49],$timestampsarray[51],$timestampsarray[53],$timestampsarray[55],$timestampsarray[57],$timestampsarray[59],$timestampsarray[61],$timestampsarray[63]);
+
+        foreach my $fts (@threadfts) {
+                if ($currentfts == $timestampsarray[0]) {
+                        $previousfts="none";
+                        $previouslts="none";
+                        $threadnum=1;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[2] ) {
+                        $previousfts=$timestampsarray[0];
+                        $previouslts=$timestampsarray[1];
+                        $threadnum=2;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[4] ) {
+                        $previousfts=$timestampsarray[2];
+                        $previouslts=$timestampsarray[3];
+                        $threadnum=3;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[6]) {
+                        $previousfts=$timestampsarray[4];
+                        $previouslts=$timestampsarray[5];
+                        $threadnum=4;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[8]) {
+                        $previousfts=$timestampsarray[6];
+                        $previouslts=$timestampsarray[7];
+                        $threadnum=5;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[10]) {
+                        $previousfts=$timestampsarray[8];
+                        $previouslts=$timestampsarray[9];
+                        $threadnum=6;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[12]) {
+                        $previousfts=$timestampsarray[10];
+                        $previouslts=$timestampsarray[11];
+                        $threadnum=7;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[14]) {
+                        $previousfts=$timestampsarray[12];
+                        $previouslts=$timestampsarray[13];
+                        $threadnum=8;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1]; }
+                elsif ($currentfts == $timestampsarray[16]) {
+                        $previousfts=$timestampsarray[14];
+                        $previouslts=$timestampsarray[15];
+                        $threadnum=9;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[18]) {
+                        $previousfts=$timestampsarray[16];
+                        $previouslts=$timestampsarray[17];
+                        $threadnum=10;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[20]) {
+                        $previousfts=$timestampsarray[18];
+                        $previouslts=$timestampsarray[19];
+                        $threadnum=11;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[22]) {
+                        $previousfts=$timestampsarray[20];
+                        $previouslts=$timestampsarray[21];
+                        $threadnum=12;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[24]) {
+                        $previousfts=$timestampsarray[22];
+                        $previouslts=$timestampsarray[23];
+                        $threadnum=13;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[26]) {
+                        $previousfts=$timestampsarray[24];
+                        $previouslts=$timestampsarray[25];
+                        $threadnum=14;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[28]) {
+                        $previousfts=$timestampsarray[26];
+                        $previouslts=$timestampsarray[27];
+                        $threadnum=15;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[30]) {
+                        $previousfts=$timestampsarray[28];
+                        $previouslts=$timestampsarray[29];
+                        $threadnum=16;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[32]) {
+                        $previousfts=$timestampsarray[30];
+                        $previouslts=$timestampsarray[31];
+                        $threadnum=17;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[34]) {
+                        $previousfts=$timestampsarray[32];
+                        $previouslts=$timestampsarray[33];
+                        $threadnum=18;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[36]) {
+                        $previousfts=$timestampsarray[34];
+                        $previouslts=$timestampsarray[35];
+                        $threadnum=19;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[38]) {
+                        $previousfts=$timestampsarray[36];
+                        $previouslts=$timestampsarray[37];
+                        $threadnum=20;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[40]) {
+                        $previousfts=$timestampsarray[38];
+                        $previouslts=$timestampsarray[39];
+                        $threadnum=21;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[42]) {
+                        $previousfts=$timestampsarray[40];
+                        $previouslts=$timestampsarray[41];
+                        $threadnum=22;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[44]) {
+                        $previousfts=$timestampsarray[42];
+                        $previouslts=$timestampsarray[43];
+                        $threadnum=23;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[46]) {
+                        $previousfts=$timestampsarray[44];
+                        $previouslts=$timestampsarray[45];
+                        $threadnum=24;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[48]) {
+                        $previousfts=$timestampsarray[46];
+                        $previouslts=$timestampsarray[47];
+                        $threadnum=25;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[50]) {
+                        $previousfts=$timestampsarray[48];
+                        $previouslts=$timestampsarray[49];
+                        $threadnum=26;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[52]) {
+                        $previousfts=$timestampsarray[50];
+                        $previouslts=$timestampsarray[51];
+                        $threadnum=27;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[54]) {
+                        $previousfts=$timestampsarray[52];
+                        $previouslts=$timestampsarray[53];
+                        $threadnum=28;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[56]) {
+                        $previousfts=$timestampsarray[54];
+                        $previouslts=$timestampsarray[55];
+                        $threadnum=29;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[58]) {
+                        $previousfts=$timestampsarray[56];
+                        $previouslts=$timestampsarray[57];
+                        $threadnum=30;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[60]) {
+                        $previousfts=$timestampsarray[58];
+                        $previouslts=$timestampsarray[59];
+                        $threadnum=31;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+                elsif ($currentfts == $timestampsarray[62]) {
+                        $previousfts=$timestampsarray[60];
+                        $previouslts=$timestampsarray[61];
+                        $threadnum=32;
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];}
+
+                else {
+                        $previousfts="undetermined";
+                        $previouslts="undetermined";
+                        $threadnum="undetermined";
+                        $firstthreadfts=$timestampsarray[0];
+                        $firstthreadlts=$timestampsarray[1];
+                }
+
+        } #end of foreach my $fts
+
+        #Debug
+        print "determineprevthr: Called on $user and $currentfts and returning prev fts: $previousfts, lts:$previouslts and thread num. $threadnum \n";
+        return ($previousfts,$previouslts,$threadnum,$firstthreadfts,$firstthreadlts);
+
+} #End of determinepreviousthread
+
 
 
 1;
