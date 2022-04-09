@@ -729,7 +729,7 @@ sub get_requested_data_from_time_range {
 
 		
 		#Return a list containing the three array references
-		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
+		return (\@targetprocarchtables, \@targetfilearchtables, \@targetnetarchtables);
 
 	} elsif ( $answer eq "False") {
 		#Here we have had no data in range, because check_requested_data_time_range()
@@ -737,7 +737,7 @@ sub get_requested_data_from_time_range {
 	        push (@targetprocarchtables, "NODATA");
 		push (@targetfilearchtables, "NODATA");
 		push (@targetnetarchtables, "NODATA");
-		return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
+		return (\@targetprocarchtables, \@targetfilearchtables, \@targetnetarchtables);
 
 	} else {
 		#Here we probably have a malformed query, because check_requested_data_time_range()
@@ -745,7 +745,7 @@ sub get_requested_data_from_time_range {
 		push (@targetprocarchtables, "ERROR");
                 push (@targetfilearchtables, "ERROR");
                 push (@targetnetarchtables, "ERROR");
-                return (\@targetprocarchtables, \@targetfilearchtables, @targetnetarchtables);
+                return (\@targetprocarchtables, \@targetfilearchtables, \@targetnetarchtables);
 
 	}
 
