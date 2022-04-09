@@ -717,19 +717,6 @@ sub fileothprocess {
 
 } #end of fileothprocess
  
-sub sanitize_filename {
-
-	my $fnstring = shift;
-	#Remove a '#' character from the string. That could
-	#really break our data encoding techniques
-	$fnstring =~ s/#//g;
-	#Also check if the string is greater than 4k characters which is the limit
-	#of the maximum file path in the database.
-	my $sanitizedfname=substr $fnstring,0,4095;
-	return $sanitizedfname;
-
-} #End of sanitize_filename
-
 #Here we implement the GeoIP2 location stuff
 sub pofrgeoloc {
 	my $iptogeolocate=shift;

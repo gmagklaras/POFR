@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread );
+our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename );
 
 
 #Subroutine definitions here
@@ -95,6 +95,23 @@ sub table_exists {
     }
     return 0;
 } #End of table_exists subroutine
+
+#subroutine sanitize_filename - Removes certain characters (#) and checks the length of the filename
+#so that it will not cause problems when SQL inserted to the database
+#ACCEPTS: -the parsed filename string
+#RETURNS: -the sanitized filename string
+sub sanitize_filename {
+
+        my $fnstring = shift;
+        #Remove a '#' character from the string. That could
+        #really break our data encoding techniques
+        $fnstring =~ s/#//g;
+        #Also check if the string is greater than 4k characters which is the limit
+        #of the maximum file path in the database.
+        my $sanitizedfname=substr $fnstring,0,4095;
+        return $sanitizedfname;
+
+} #End of sanitize_filename
 
 sub iso8601_date {
   die unless $_[0] =~ m/^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)Z$/;
