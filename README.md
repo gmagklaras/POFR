@@ -40,7 +40,7 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 For the server part, we recommend:
 * Fedora 34/35 with a MariaDB (versions 10.4 and 10.5) RDBMS backend.
 
-Everything else needed by the client and server components is provided by the distribution and its own PERL distribution which is usually the most/recent up-to-date version (v. 5.34.1). 
+Everything else needed by the client and server components is provided by the distribution and its own PERL distribution which is usually the most/recent up-to-date version (v. 5.36.0). 
 
 In addition, you will need to ensure that: 
 * The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
