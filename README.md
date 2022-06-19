@@ -32,8 +32,9 @@ For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sam
 ## Dependencies and requirements
 
 Minimal dependencies are required. A compatible distro. For the client part, the following Linux distributions are known to work with POFR:
-* RHEL/CentOS 7
-* RHEL/CentOS 8/AlmaLinux 8/Rocky Linux 8
+* RHEL7/CentOS 7
+* RHEL7/CentOS 8/AlmaLinux 8/Rocky Linux 8
+* RHEL9/CentOS 9/AlmaLinux 9/Rocky Linux 9
 * Fedora 33/34/35/36
 * Ubuntu 18.04 LTS/20.04 LTS
 
