@@ -36,7 +36,7 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 * RHEL8/CentOS 8/AlmaLinux 8/Rocky Linux 8
 * RHEL9/CentOS 9/AlmaLinux 9/Rocky Linux 9
 * Fedora 33/34/35/36
-* Ubuntu 18.04 LTS/20.04 LTS
+* Ubuntu 18.04 LTS/20.04 LTS/22.04.1 LTS
 
 For the server part, we recommend:
 * Fedora 34/35 with a MariaDB (versions 10.4 and 10.5) RDBMS backend.
