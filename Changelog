@@ -1,3 +1,25 @@
+v1.2.0 named "Hedy Lamarr" (Oct 1 2022):
+- Bug fixes:
+  - mergetables.pl: Improved the data date range sampling loop (speed and accuracy) of the architables subroutine, by ordering the fields with the ORDER BY
+    statement. psentity is NOT unique in the psinfo table. (info fed from MERGE tables), so it can never be used to sort out tables. The same in ordering 
+    the fields before we extract them to the CSV file. (https://github.com/gmagklaras/POFR/commit/701e67a816cc2971be2c08f5c7968bef944aa9d2)
+  - POFR.pm: Corrections on the fact we were not returning array references from the get_requested_data_from_time_range subroutine and that was creating 
+    problems when we wanted to call the function. Fixed now. (https://github.com/gmagklaras/POFR/commit/c853cef81d73e671dc0a038d887fa49e843683e2)
+- Security issues:
+  - All security bugs addressed in the Perl Delta for release 5.36.0 Delta. (https://perldoc.perl.org/5.36.0/perldelta) (see also 
+    Improvements/upgrades/compatibility issues) 
+- Impovements/upgrades/compatibility issues:
+  - sendproc.pl: Increased the persistence of the client on failed connections from 3 min to 4 min. (https://github.com/gmagklaras/POFR/commit/9f46f0862407a34e772832a1a5de07671e4ac32b)
+  - producepofrperl: Added the DateTime::Format::Duration CPAN module, necessary for date conversions. (https://github.com/gmagklaras/POFR/commit/1eb31cbd78de9863193f53971522c2729d0ee82f)
+  - Added the utility scripts:
+     findrange.pl: A collection of routines to create subsets of the archived data. Not yet in use in production, only for testing: 
+      (https://github.com/gmagklaras/POFR/commit/33edeb53f2e07c3d138d29bd7d7be2f9f098cfaf)
+      (https://github.com/gmagklaras/POFR/commit/692f5c2068940c2325ab53f1890e0ee8e011e5f3)
+      (https://github.com/gmagklaras/POFR/commit/6de984cfdba0520b786231d44c294de9073afa05)
+      (https://github.com/gmagklaras/POFR/commit/5b8e17bc2e3da4ae0a5608537706dcfd0c4553be)
+      (https://github.com/gmagklaras/POFR/commit/ce0c8f0b39e16862a550114c9d712a68c9d961fd)
+     
+
 v1.1.0 named "Lorinda Cherry" (Feb 27 2022):
 - Bug fixes: 
   - mergetables.pl: Removed a loop where we waiting from thread 1 for the other threads to finish to call mergetables.pl. Mergetables.pl is called at the beginnig of the
