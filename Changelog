@@ -17,8 +17,37 @@ v1.2.0 named "Hedy Lamarr" (Oct 1 2022):
       (https://github.com/gmagklaras/POFR/commit/692f5c2068940c2325ab53f1890e0ee8e011e5f3)
       (https://github.com/gmagklaras/POFR/commit/6de984cfdba0520b786231d44c294de9073afa05)
       (https://github.com/gmagklaras/POFR/commit/5b8e17bc2e3da4ae0a5608537706dcfd0c4553be)
+  - Big refactoring of code by moving often used subroutines to the POFR.pm:
       (https://github.com/gmagklaras/POFR/commit/ce0c8f0b39e16862a550114c9d712a68c9d961fd)
-     
+      (https://github.com/gmagklaras/POFR/commit/d3323ddfc196dbb7c8502aca78da5e264a39aedd)
+      (https://github.com/gmagklaras/POFR/commit/4ffbbd752ee040cda5530c06ee0f2d74c47a51c4)
+      (https://github.com/gmagklaras/POFR/commit/c3bb8f4a9c2c4c9983660258775308738e4fb72c)
+      (https://github.com/gmagklaras/POFR/commit/6af7155550850103143591b1d37f4a73644c1809)
+      (https://github.com/gmagklaras/POFR/commit/adc4c9406e06530886d1faa400e03daf00284ab7)
+      (https://github.com/gmagklaras/POFR/commit/7552c4e34a0347d4c199c7370aa21f6833bf11c5)
+      (https://github.com/gmagklaras/POFR/commit/519a043fd51eb1a26f7198d4f443144544ef3d35)
+      (https://github.com/gmagklaras/POFR/commit/f8e2fb805c7405bee169cb6672a76a4b8a479acb)
+      (https://github.com/gmagklaras/POFR/commit/24a0d72b6df58df7b8119ab0ddc22d373ffd3c84)
+      (https://github.com/gmagklaras/POFR/commit/bac50f260b9899b985292e6ae7a85fc2ef8cc56f)
+      (https://github.com/gmagklaras/POFR/commit/a9f415163300152ec70a599bce8d701156c9bd75)
+      (https://github.com/gmagklaras/POFR/commit/88586c847ffaaab334a7c347d3d16f9ff55c55e4)
+  - mergearchive.pl: Re-write to produce time subsets with the get_requested_data_from_time_range from POFR.pm. Also changed the command line argument 
+    structure to specify date and time ranges. (https://github.com/gmagklaras/POFR/commit/cbcd655f34e549aa19728a23a90a4c3a34cd54cf)
+  - mergearchive.pl: Corrected the dispusage subroutine. (https://github.com/gmagklaras/POFR/commit/d8cf97fe562dd4a3fdaf6f469af1a5c8e7a8cb3a)
+  - Upgrade of the POFR Perl release from Perl 5.34.0/5.34.1 to Perl 5.36.0:
+    (https://github.com/gmagklaras/POFR/commit/73919c24346422b7a91b3a39a963ca649a90e41c)
+    (https://github.com/gmagklaras/POFR/commit/d473be29044833791f86e1ba32336cc3854e3356)
+    (https://github.com/gmagklaras/POFR/commit/8c45139dc0d28074df8cca65e9509d5c0dc95871)
+    (https://github.com/gmagklaras/POFR/commit/9f1b7d0303a3873e45fbdfdad00fe3c3ecd2ebde)
+    (https://github.com/gmagklaras/POFR/commit/c909b9da87e8c2a0cc8c9177a8b2bbe915c31d3e)
+    (https://github.com/gmagklaras/POFR/commit/f7f21dec06b48b6bb144e3c20688d7f798fa62e6)
+    (https://github.com/gmagklaras/POFR/commit/9157254bf4f63137bcec9d64cb9eb38ad70be7a9)
+  - Added the POFR Perl Release 5.36.0 for RHEL9 and derivatives. (https://github.com/gmagklaras/POFR/commit/253afe118231d08fe12ee5df7c1fb2cb7b2537fa)
+  - POFRmanual.pdf: Updated versions of distros in the compatibility section, added suggection of client logrotation config, revised the temporal assembly 
+    and data browsing text of section F4, added section G to outline the ethical considerations for POFR usage.
+    (https://github.com/gmagklaras/POFR/commit/e7f59cb45e9794091f5c95ed7092fb2093607b61)
+  - Updated the IP2LOCATION-LITE DB to the October 2022 release. (https://github.com/gmagklaras/POFR/commit/61984e4afc72b2a17f92b7335479ad8395bd8aff)
+  
 
 v1.1.0 named "Lorinda Cherry" (Feb 27 2022):
 - Bug fixes: 
