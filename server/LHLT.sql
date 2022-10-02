@@ -2,7 +2,7 @@
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
-#Copyright (C) 2021 Georgios Magklaras
+#Copyright (C) 2021,2022 Georgios Magklaras
 
 #This program is free software; you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by

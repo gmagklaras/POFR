@@ -8,7 +8,7 @@ use lib '../pofrperl/lib/site_perl/5.36.0';
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
-#Copyright (C) 2021 Georgios Magklaras
+#Copyright (C) 2021,2022 Georgios Magklaras
 
 #Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
 #`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) written by Georgios Magklaras, 
