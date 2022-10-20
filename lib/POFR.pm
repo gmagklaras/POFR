@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename );
+our @EXPORT = qw( getdbauth dbtimestamp timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename );
 
 
 #Subroutine definitions here
