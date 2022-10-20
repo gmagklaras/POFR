@@ -137,7 +137,7 @@ foreach my $req (@requests) {
 			#The dbname will be the cid without the dashes
                         $dbname =~ s/-//g;
 
-			my ($ryear,$rmonth,$rday,$rhour,$rmin,$rsec)=timestamp();
+			my ($ryear,$rmonth,$rday,$rhour,$rmin,$rsec)=dbtimestamp();
 			
 			#Quote the client hostname in case there are special characters
 			$clienthostname=$lhltservh->quote($clienthostname);
