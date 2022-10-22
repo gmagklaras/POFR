@@ -33,7 +33,7 @@ use Exporter;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename );
+our @EXPORT = qw( getdbauth dbtimestamp timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename );
 
 
 #Subroutine definitions here
@@ -54,7 +54,8 @@ sub getdbauth {
 
 } #end of getdbauth()
 
-sub timestamp {
+#Subroutine dbtimestamp: Gets a timesource from the database
+sub dbtimestamp {
         #get the db authentication info
         my @authinfo=getdbauth();
         my ($username,$dbname,$dbpass,$hostname);
@@ -73,7 +74,32 @@ sub timestamp {
         my ($year,$month,$day,$hour,$min,$sec)=split("-",$timearray[0]);
         $tsSQLh->finish();
         return ($year,$month,$day,$hour,$min,$sec);
-} #end of timestamp subroutine
+} #end of dbtimestamp subroutine
+
+#Subroutine timestamp: Gets a date and time from the POFR tarball to reflect the time zone of the client
+sub timestamp {
+        my $epoch=shift;
+        my $time_zone=shift;
+
+        #The epoch value we get is epoch plus msec. The msec value needs to come off.
+        my $epochminusmsec=substr $epoch,0,10;
+
+        my $dt=DateTime->from_epoch( epoch => $epochminusmsec );
+        #Here we set the time zone acquired from the POFR client
+        #to ensure that we report the time/hour on the server properly.
+        $dt->set_time_zone( $time_zone );
+
+        my $calcyear=$dt->year;
+        my $calcmonth=$dt->month;
+        my $day_of_month=$dt->day;
+        my $calchour=$dt->hour;
+        my $calcmin=$dt->minute;
+        my $calcsec=$dt->second;
+
+        return ($calcyear,$calcmonth,$day_of_month,$calchour,$calcmin,$calcsec);
+
+} #end of timestamp
+
 
 sub table_exists {
     my $db = shift;
