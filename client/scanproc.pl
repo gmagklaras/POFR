@@ -159,32 +159,50 @@ while (1==1) {
 	 	#Remove white space from $ppid and $name
 	 	$ppid=~ s/(^\s+|\s+$)//g;
 	 	$name=~ s/(^\s+|\s+$)//g;
-	 	my $uid;
-	 	my @struid;
-	 	my @euid;
+		my $ruid;
+                my $euid;
+                my $rgid;
+                my $egid;
+                my @struid;
+                my @strgid;
+                my @parseduid;
+                my @parsedgid;
 	 	@struid=split ":", $ppida[6];
 	 	#Depending on the version of the Linux kernel the structure
 	 	#of /proc/pid/status differs. Earlier Linux kernels (2.6.x)
 	 	#seem to contain the uid field in the seventh line [pos 6 starting from 0]. 
 	 	#However, newer 4.x kernels have it in the ninth line [pos 8 starting from 0].
 	 	#Thus, we check we are getting data from the right field here. 
-	 	@euid=split "\t", $struid[1];
-	 	if ( $euid[0] eq 'Uid') {
+		@parseduid=split "\t", $struid[1];
+		if ( $parseduid[0] eq 'Uid') {
 			#We are dealing with an older 2.6.x Linux kernel  
-	 		$uid=$euid[1];
+			$ruid=$parseduid[1];
+
 	 	} else { 
 			#We are dealing with a 4.x/5.x Linux kernel and thus
 			#we fish for the Uid field on the 9th line from the top. 
-			@struid=split ":", $ppida[8];
-			@euid=split "\t", $struid[1];
-			$uid=$euid[1];
-	 	 
-	 	} #end of $euid[0]...
+			#we fish for the Gid field on the 10th line from the top.
+	 	        @struid=split ":", $ppida[8];
+                        @strgid=split ":", $ppida[9];
+                        @parseduid=split "\t", $struid[1];
+                        @parsedgid=split "\t", $strgid[1];
+                        $ruid=$parseduid[1];
+                        $euid=$parseduid[2];
+                        $rgid=$parsedgid[1];
+                        $egid=$parsedgid[2];
 
-	 	#Remove any new line characters from uid
-	 	chomp $uid;
-	 	close(STA);
-	 	opendir(FDD, "/proc/$proc/fd");
+	 	} #end of $euid[0]...
+		
+		close(STA);
+
+
+	 	#Remove any new line characters from all the real and effective uid and gid data
+	 	chomp $ruid;
+		chomp $euid;
+		chomp $rgid;
+		chomp $egid;
+	 	
+		opendir(FDD, "/proc/$proc/fd");
 	 	my @fds = grep { /^[1-9][0-9]*/  } readdir(FDD);
 	 	close(FDD);
 	 	my @openfiles;
@@ -194,10 +212,10 @@ while (1==1) {
     
     		if ($#openfiles=='-1') {
 			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$uid###$name###$cmdline###LUARMv2NOOPENFILES \n"); } 
+			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###LUARMv2NOOPENFILES \n"); } 
 		else { 
 			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$uid###$name###$cmdline###@openfiles \n"); 
+			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles \n"); 
     		}	
 
 	 } #END OF foreach my $proc
