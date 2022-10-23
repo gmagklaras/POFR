@@ -1,3 +1,15 @@
+v1.2.1 named "Hedy Lamarr" (Oct 23 2022):
+This is a bug fix release:
+-Bug fixes:
+  https://github.com/gmagklaras/POFR/pull/2
+  -Fix timing issues by:
+    -Re-introducing into the code subroutine timestamp() which times the data from the POFR tarball epoch and tz data.
+    -Differentiating between the timestamp() and dbtimestamp(). The latter just takes a timestamp from the RDBMS, for example to time a registration
+    -Re-ordering the data into "ORDER BY" SQL statements to avoid a bug where the psinfo/fileinfo/netinfo tables contain data that spans multiple days (say two consecutive days), so the "ORDER BY chour,cmin,csec,cmsec" will place the data of the latter day first. Consequently, these SQL ORDER BY statements should instead read "ORDER BY cyear,cmonth,cday,chour,cmin,csec,cmsec" and 
+    "ORDER BY cyear DESC,cmonth DESC,cday DESC,chour DESC,cmin DESC,csec DESC,cmsec DESC" to find the latest data instead.
+
+Due to the severity of this bug that affects idle/less loaded systems, all users are advised to switch immediately to release v1.2.1
+
 v1.2.0 named "Hedy Lamarr" (Oct 1 2022):
 - Bug fixes:
   - mergetables.pl: Improved the data date range sampling loop (speed and accuracy) of the architables subroutine, by ordering the fields with the ORDER BY
