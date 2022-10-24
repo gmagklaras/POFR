@@ -244,10 +244,10 @@ sub filerefprocess {
                                                                 my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
 								my $shapf=sha1_hex($filedigeststr2);
 								#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 								$SQLh->execute();
                                                                 my @mergedfileinfohits=$SQLh->fetchrow_array();
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 								$SQLh->execute();
                                                                 my @fileinfohits=$SQLh->fetchrow_array();
 								if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") {
@@ -337,13 +337,13 @@ sub filerefprocess {
                                                         my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                        	my $shapf=sha1_hex($filedigeststr2);
 							#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR on the previous thread OR on the current threads table?
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @fileinfohits=$SQLh->fetchrow_array();
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 							$SQLh->execute();
 							my @previousfileinfohits=$SQLh->fetchrow_array();
 
@@ -533,10 +533,10 @@ sub fileothprocess {
                                                                 my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                 my $shapf=sha1_hex($filedigeststr2);
 								#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                                 $SQLh->execute();
                                                                 my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+                                                                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                                 $SQLh->execute();
                                                                 my @fileinfohits=$SQLh->fetchrow_array();
                                                                 if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") {
@@ -624,13 +624,13 @@ sub fileothprocess {
                                                         my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                         my $shapf=sha1_hex($filedigeststr2);
 							#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @fileinfohits=$SQLh->fetchrow_array();
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$pruid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @previousfileinfohits=$SQLh->fetchrow_array();
                                                         if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1" || $previousfileinfohits[0] >= "1" ) {
@@ -1371,7 +1371,7 @@ sub parsefiles {
 			#my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid' AND cday='$pidsday' AND chour='$pidshour' AND cmin='$pidsmin' " );
 		        #Is this the primary thread?
 		        #...
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND ruid='$nuid'  " );
                         $SQLh->execute();
                         my @pidhits=$SQLh->fetchrow_array();
 			
@@ -1382,7 +1382,7 @@ sub parsefiles {
 			if ($thnumber == 1) {
 				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
 				#@ptablepidhits. The pid hits array @pidhits gets populated from the current (first thread) file table.
-				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND ruid='$nuid'  " );
 				$SQLh->execute();
 				@ptablepidhits=$SQLh->fetchrow_array();
 				
@@ -1399,10 +1399,10 @@ sub parsefiles {
 			} else {
 				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
 				#@ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND ruid='$nuid'  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND uid='$nuid'   " );
+                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND ruid='$nuid'   " );
                                 $SQLh->execute();
                                 @ftablepidhits=$SQLh->fetchrow_array();
 
@@ -1531,7 +1531,7 @@ sub parsefiles {
                         my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
                         my $socketstr="socket:[$ninode]";
 			
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND ruid='$nuid'  " );
                         $SQLh->execute();
                         my @pidhits=$SQLh->fetchrow_array();  
 
@@ -1541,7 +1541,7 @@ sub parsefiles {
                         if ($thnumber == 1) {
 				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
 				#@ptablepidhits. The file table pid hits array @pidhits gets populated from the  file table.
-                                $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND uid='$nuid'  " );
+                                $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND ruid='$nuid'  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
 
@@ -1560,10 +1560,10 @@ sub parsefiles {
 
 				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
 				# @ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND ruid='$nuid'  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND uid='$nuid'   " );
+                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND ruid='$nuid'   " );
                                 $SQLh->execute();
                                 @ftablepidhits=$SQLh->fetchrow_array();
 
