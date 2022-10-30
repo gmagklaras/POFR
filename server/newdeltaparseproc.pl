@@ -189,14 +189,15 @@ sub filerefprocess {
         my $buffer;
         gunzip $FHLZ => \$buffer;
 	my @lines=split "\n", $buffer;
-        my ($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles);
+	#sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline
+        my ($sprocpid,$pid,$ppid,$pruid,$peuid,$prgid,$pegid,$procname,$procarg,$procfiles);
 	#Connect to the database
 	my $userdb="DBI:MariaDB:$ldb:$hostname";
         my $hostservh=DBI->connect ($userdb, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
 
 	foreach my $line (@lines) {
 		chomp $line;
-		($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles)=split("###", $line);
+		($sprocpid,$pid,$ppid,$pruid,$peuid,$prgid,$pegid,$procname,$procarg,$procfiles)=split("###", $line);
 		#Debug
 		#print "filerefprocess debug: sprocpid: $sprocpid\n pid:$pid \n ppid:$ppid \n procfiles: $procfiles \n";
 
@@ -206,7 +207,7 @@ sub filerefprocess {
 			#processes: processes that we did not manage to capture properly due to the fact they were 
 			#too fast to capture and scp transfers of POFR client data. Do nothing.
 		} else {
-			my $digeststr1=$pid.$ppid.$puid.$procname.$procarg;
+			my $digeststr1=$pid.$ppid.$pruid.$procname.$procarg;
                         my $shanorm=sha1_hex($digeststr1);
 			if ($thnum==1) {
 				#First thread
@@ -223,7 +224,7 @@ sub filerefprocess {
 					if ( $psinfoshahits[0]>="1" ) {
 						#First thread, record does not exist in current thread but exists in the psinfo table from a previous thread cycle of the merged window
 						#Have any of the files changed since then?
-						my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+						my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
 						my $shafull=sha1_hex($digeststr2);
 						$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM psinfo WHERE shafull='$shafull' AND shanorm='$shanorm' ");
 						$SQLh->execute();
@@ -240,13 +241,13 @@ sub filerefprocess {
 								#,pid and ppid as well as the process name to avoid a situation where redundant file events are
 								#logged (anon_inode:[eventfd] case): if it on the SHASUM is on the filename only.
 								my $sanitizedpf=sanitize_filename($pf);
-                                                                my $filedigeststr2=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                                my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
 								my $shapf=sha1_hex($filedigeststr2);
 								#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 								$SQLh->execute();
                                                                 my @mergedfileinfohits=$SQLh->fetchrow_array();
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 								$SQLh->execute();
                                                                 my @fileinfohits=$SQLh->fetchrow_array();
 								if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") {
@@ -258,8 +259,8 @@ sub filerefprocess {
 									} else {
 										my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                                 $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                                my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                                . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                                my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                                . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
 									} #end of if ( ($sanitizedpf eq...
 
@@ -270,12 +271,12 @@ sub filerefprocess {
 						#First thread, record does not exist in current thread, it does also NOT exist in the psinfo table from a previous thread cycle of the merged window 
 						#thus it has to be SQL inserted.
 						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+                                                my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                                 my $shafull=sha1_hex($digeststr2);
                                                 $procarg=$hostservh->quote($procarg);
                                                 $procfiles=$hostservh->quote($procfiles);
-                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                . "VALUES ('$shanorm','$shafull','$puid','$pid','$ppid','$procname',$procarg,"
+                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                . "VALUES ('$shanorm','$shafull','$pruid','$peuid','$prgid','$pegid','$pid','$ppid','$procname',$procarg,"
                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                 if (($rows==-1) || (!defined($rows))) {
                                                         print "parseproc.pl Fatal Error: No process record was altered. Record $line was not registered.\n";
@@ -291,10 +292,10 @@ sub filerefprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-									my $filedigeststr=$sanitizedpf.$puid.$pid.$ppid.$procname;
+									my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                                 } #end of if ( ($sanitizedpf eq...
 							} #end of  foreach my $pfile
@@ -313,7 +314,7 @@ sub filerefprocess {
 				if ( $psinfoshahits[0]>="1" || $psinfoshahits2[0]>="1") {
 					#NOT the first thread, record exists in the psinfo table OR in the previous thread table
 					#Have any of the files changed since then?
-					my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+					my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                         my $shafull=sha1_hex($digeststr2);
 					$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM psinfo WHERE shafull='$shafull' AND shanorm='$shanorm' ");
                                         $SQLh->execute();
@@ -333,16 +334,16 @@ sub filerefprocess {
 							#,pid and ppid as well as the process name to avoid a situation where redundant file events are
 							#logged (anon_inode:[eventfd] case): if it on the SHASUM is on the filename only.
 							my $sanitizedpf=sanitize_filename($pf);
-                                                        my $filedigeststr2=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                        my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                        	my $shapf=sha1_hex($filedigeststr2);
 							#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR on the previous thread OR on the current threads table?
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @fileinfohits=$SQLh->fetchrow_array();
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
 							$SQLh->execute();
 							my @previousfileinfohits=$SQLh->fetchrow_array();
 
@@ -355,8 +356,8 @@ sub filerefprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
 								} #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
 							} #end of if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") else ...
@@ -375,12 +376,12 @@ sub filerefprocess {
 						#NOT the first thread, record does NOT exist in the psinfo table NOR a previous thread 
 						#and NOT on the current thread. Record need to be SQL inserted.
 						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+                                                my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                                 my $shafull=sha1_hex($digeststr2);
                                                 $procarg=$hostservh->quote($procarg);
                                                 $procfiles=$hostservh->quote($procfiles);
-                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                . "VALUES ('$shanorm','$shafull','$puid','$pid','$ppid','$procname',$procarg,"
+                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                . "VALUES ('$shanorm','$shafull','$pruid','$peuid','$prgid','$pegid','$pid','$ppid','$procname',$procarg,"
                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                 if (($rows==-1) || (!defined($rows))) {
                                                         print "parseproc.pl Fatal Error: No process record was altered. Record $line was not registered.\n";
@@ -395,10 +396,10 @@ sub filerefprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-									my $filedigeststr=$sanitizedpf.$puid.$pid.$ppid.$procname;
+									my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
 								} #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
 							} #end of foreach my $pfile (@pfarray)
@@ -473,8 +474,10 @@ sub fileothprocess {
         $tzone =~ s/.proc.gz//;
         $msecs=substr $epochplusmsec, -6;
         $epochref=substr $epochplusmsec, 0, -6;
-	my ($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles);
- 	#Connect to the database
+	#sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline
+        my ($sprocpid,$pid,$ppid,$pruid,$peuid,$prgid,$pegid,$procname,$procarg,$procfiles);
+ 	
+	#Connect to the database
  	my $userdb="DBI:MariaDB:$ldb:$hostname";
  	my $hostservh=DBI->connect ($userdb, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
 	
@@ -486,14 +489,14 @@ sub fileothprocess {
 		#This is the last file, we need to hit the RDBMS
 		foreach my $entry (@delta) {
 			chomp $entry;
-                	($sprocpid,$pid,$ppid,$puid,$procname,$procarg,$procfiles)=split("###", $entry);
+                	($sprocpid,$pid,$ppid,$pruid,$peuid,$prgid,$pegid,$procname,$procarg,$procfiles)=split("###", $entry);
                 	my @excludepid=split ',', $sprocpid;
 			if ( $pid==$excludepid[0] or $pid==$excludepid[1] or $ppid==$excludepid[0] or $ppid==$excludepid[1] or $procname eq '' or ($procname eq "ssh" and $procarg =~ m/($serverhostname)/ ) or ($procname eq "scp" and $procarg =~ m/($serverhostname)/) or ($procname eq "ssh" and $procarg =~ m/($serverip)/ ) or ($procname eq "scp" and $procarg =~ m/($serverip)/) ) {
 				#Here we exclude the processes that are related to POFR client, as well as erroneous
 				#processes: processes that we did not manage to capture properly due to the fact they were 
 				#too fast to capture and scp transfers of POFR client data. Do nothing.
 			} else {
-				my $digeststr1=$pid.$ppid.$puid.$procname.$procarg;
+				my $digeststr1=$pid.$ppid.$pruid.$procname.$procarg;
                         	my $shanorm=sha1_hex($digeststr1);
 				if ($thnum==1) {
 					#First thread
@@ -510,7 +513,7 @@ sub fileothprocess {
                                         if ( $psinfoshahits[0]>="1" ) {
 						#First thread, record does not exist in current thread but exists in the psinfo table from a previous thread cycle of the merged window
 						#Have any of the files changed since then?
-						my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+						my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                                 my $shafull=sha1_hex($digeststr2);
                                                 $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM psinfo WHERE shafull='$shafull' AND shanorm='$shanorm' ");
                                                 $SQLh->execute();
@@ -527,13 +530,13 @@ sub fileothprocess {
 								#,pid and ppid as well as the process name to avoid a situation where redundant file events are
 								#logged (anon_inode:[eventfd] case): if it on the SHASUM is on the filename only.
 								my $sanitizedpf=sanitize_filename($pf);
-                                                                my $filedigeststr2=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                                my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                 my $shapf=sha1_hex($filedigeststr2);
 								#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+								$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                                 $SQLh->execute();
                                                                 my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+                                                                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                                 $SQLh->execute();
                                                                 my @fileinfohits=$SQLh->fetchrow_array();
                                                                 if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") {
@@ -545,8 +548,8 @@ sub fileothprocess {
 									} else {
 										my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                                 $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                                my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                                . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                                my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                                . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                                         } #end of if ( ($sanitizedpf eq...
 								} #end of if ( $mergedfileinfohits[0] >= "1"
@@ -556,12 +559,12 @@ sub fileothprocess {
 						#First thread, record does not exist in current thread, it does also NOT exist in the psinfo table from a previous thread cycle of the merged window 
 						#thus it has to be SQL inserted.
 						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+                                                my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                                 my $shafull=sha1_hex($digeststr2);
                                                 $procarg=$hostservh->quote($procarg);
                                                 $procfiles=$hostservh->quote($procfiles);
-                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                . "VALUES ('$shanorm','$shafull','$puid','$pid','$ppid','$procname',$procarg,"
+                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                . "VALUES ('$shanorm','$shafull','$pruid','$peuid','$prgid','$pegid','$pid','$ppid','$procname',$procarg,"
                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                 if (($rows==-1) || (!defined($rows))) {
                                                         print "parseproc.pl Fatal Error: No process record was altered. Record $entry was not registered.\n";
@@ -576,10 +579,10 @@ sub fileothprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                        my $filedigeststr=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                                        my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                                 } #end of if ( ($sanitizedpf eq...
 							} #end of  foreach my $pfile
@@ -598,7 +601,7 @@ sub fileothprocess {
                                 if ( $psinfoshahits[0]>="1" || $psinfoshahits2[0]>="1" ) {
 					#NOT the first thread, record exists in the psinfo table OR in the previous thread table
 					#Have any of the files changed since then?
-					my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+					my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                         my $shafull=sha1_hex($digeststr2);
 					$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM psinfo WHERE shafull='$shafull' AND shanorm='$shanorm' ");
                                         $SQLh->execute();
@@ -618,16 +621,16 @@ sub fileothprocess {
                                                         #,pid and ppid as well as the process name to avoid a situation where redundant file events are
                                                         #logged (anon_inode:[eventfd] case): if it on the SHASUM is on the filename only.
                                                         my $sanitizedpf=sanitize_filename($pf);
-                                                        my $filedigeststr2=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                        my $filedigeststr2=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                         my $shapf=sha1_hex($filedigeststr2);
 							#Since the process record exists in the psinfo table, does the file in question exist on the fileinfo OR the current threads table?
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM fileinfo WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @mergedfileinfohits=$SQLh->fetchrow_array();
-                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+                                                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @fileinfohits=$SQLh->fetchrow_array();
-							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND uid='$puid' ");
+							$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablefilename WHERE shasum='$shapf' AND pid='$pid' AND ppid='$ppid' AND ruid='$pruid' ");
                                                         $SQLh->execute();
                                                         my @previousfileinfohits=$SQLh->fetchrow_array();
                                                         if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1" || $previousfileinfohits[0] >= "1" ) {
@@ -639,8 +642,8 @@ sub fileothprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                                 } #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
 							} #end of if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") else ...
@@ -659,12 +662,12 @@ sub fileothprocess {
 						#NOT the first thread, record does NOT exist in the psinfo table NOR a previous thread 
 						#and NOT on the current thread. Record needs to be SQL inserted.
 						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                my $digeststr2=$pid.$ppid.$puid.$procname.$procarg.$procfiles;
+                                                my $digeststr2=$pid.$ppid.$pruid.$procname.$procarg.$procfiles;
                                                 my $shafull=sha1_hex($digeststr2);
                                                 $procarg=$hostservh->quote($procarg);
                                                 $procfiles=$hostservh->quote($procfiles);
-                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                . "VALUES ('$shanorm','$shafull','$puid','$pid','$ppid','$procname',$procarg,"
+                                                my $rows=$hostservh->do ("INSERT INTO $tableprocname(shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                . "VALUES ('$shanorm','$shafull','$pruid','$peuid','$prgid','$pegid','$pid','$ppid','$procname',$procarg,"
                                                 . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                 if (($rows==-1) || (!defined($rows))) {
                                                         print "parseproc.pl Fatal Error: No process record was altered. Record $entry was not registered.\n";
@@ -679,10 +682,10 @@ sub fileothprocess {
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
                                                                         $sanitizedpf=$hostservh->quote($sanitizedpf);
-                                                                        my $filedigeststr=$sanitizedpf.$puid.$pid.$ppid.$procname;
+                                                                        my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
-                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
-                                                                        . "VALUES ('$shapf',$sanitizedpf,'$puid','$procname','$pid','$ppid',"
+                                                                        my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
+                                                                        . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
                                                                 } #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
 							} #end of foreach my $pfile (@pfarray)
@@ -1067,7 +1070,7 @@ sub parsefiles {
   			`destport` smallint(6) unsigned NOT NULL,
   			`ipversion` tinyint(4) NOT NULL,
  			`pid` mediumint NOT NULL,
-  			`uid` mediumint NOT NULL,
+			`uid` mediumint NOT NULL,
   			`inode` int unsigned NOT NULL,
   			`dyear` smallint(6) DEFAULT NULL,
   			`dmonth` tinyint(4) DEFAULT NULL,
@@ -1088,7 +1091,10 @@ sub parsefiles {
   			`fileaccessid` bigint NOT NULL AUTO_INCREMENT,
   			`shasum` char(40) NOT NULL,
   			`filename` varchar(4096) NOT NULL,
-  			`uid` mediumint NOT NULL,
+			`ruid` mediumint NOT NULL,
+                        `euid` mediumint NOT NULL,
+                        `rgid` mediumint NOT NULL,
+                        `egid` mediumint NOT NULL,
   			`command` text NOT NULL,
   			`pid` mediumint NOT NULL,
   			`ppid` mediumint NOT NULL,
@@ -1116,7 +1122,10 @@ sub parsefiles {
   			`psentity` bigint(20) NOT NULL AUTO_INCREMENT,
   			`shanorm` char(40) NOT NULL,
   			`shafull` char(40) NOT NULL,
-  			`uid` mediumint NOT NULL,
+			`ruid` mediumint NOT NULL,
+                        `euid` mediumint NOT NULL,
+                        `rgid` mediumint NOT NULL,
+                        `egid` mediumint NOT NULL,
   			`pid` mediumint NOT NULL,
   			`ppid` mediumint NOT NULL,
   			`command` text NOT NULL,
@@ -1362,7 +1371,7 @@ sub parsefiles {
 			#my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid' AND cday='$pidsday' AND chour='$pidshour' AND cmin='$pidsmin' " );
 		        #Is this the primary thread?
 		        #...
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid') " );
                         $SQLh->execute();
                         my @pidhits=$SQLh->fetchrow_array();
 			
@@ -1373,7 +1382,7 @@ sub parsefiles {
 			if ($thnumber == 1) {
 				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
 				#@ptablepidhits. The pid hits array @pidhits gets populated from the current (first thread) file table.
-				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
 				$SQLh->execute();
 				@ptablepidhits=$SQLh->fetchrow_array();
 				
@@ -1390,10 +1399,10 @@ sub parsefiles {
 			} else {
 				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
 				#@ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND uid='$nuid'   " );
+                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                                 $SQLh->execute();
                                 @ftablepidhits=$SQLh->fetchrow_array();
 
@@ -1522,7 +1531,7 @@ sub parsefiles {
                         my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
                         my $socketstr="socket:[$ninode]";
 			
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                         $SQLh->execute();
                         my @pidhits=$SQLh->fetchrow_array();  
 
@@ -1532,7 +1541,7 @@ sub parsefiles {
                         if ($thnumber == 1) {
 				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
 				#@ptablepidhits. The file table pid hits array @pidhits gets populated from the  file table.
-                                $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND uid='$nuid'  " );
+                                $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
 
@@ -1551,10 +1560,10 @@ sub parsefiles {
 
 				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
 				# @ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND uid='$nuid'  " );
+				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                                 $SQLh->execute();
                                 @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND uid='$nuid'   " );
+                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
                                 $SQLh->execute();
                                 @ftablepidhits=$SQLh->fetchrow_array();
 

@@ -358,7 +358,7 @@ sub producearchive {
 		my $pdatafile="/dev/shm/luarmserver/$usertomerge/temp/periodpsdata$myptable".$pmergedstring.$usertomerge;
 		#Export the data into CSV files residing in RAM;
 		#obviously the order we SQL select the fields is important and needs to match that on of the table definition ( see @mergearchivesql)
-		my $SQLh=$hostservh->prepare("SELECT psentity,shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dmin,dsec,dmsec INTO OUTFILE '$pdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myptable");
+		my $SQLh=$hostservh->prepare("SELECT psentity,shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dmin,dsec,dmsec INTO OUTFILE '$pdatafile' FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myptable");
         	$SQLh->execute();
 	}
 
@@ -366,7 +366,7 @@ sub producearchive {
 		my $fdatafile="/dev/shm/luarmserver/$usertomerge/temp/periodfiledata$myftable".$pmergedstring.$usertomerge;
 		#Export the data into CSV files residing in RAM;
 		#obviously the order we SQL select the fields is important and needs to match that on of the table definition ( see @mergearchivesql)
-		my $SQLh=$hostservh->prepare("SELECT fileaccessid,shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dsec,dmin,dmsec INTO OUTFILE '$fdatafile' CHARACTER SET utf8mb4 FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myftable");
+		my $SQLh=$hostservh->prepare("SELECT fileaccessid,shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec,dyear,dmonth,dday,dhour,dsec,dmin,dmsec INTO OUTFILE '$fdatafile' CHARACTER SET utf8mb4 FIELDS TERMINATED BY '###' LINES TERMINATED BY '\n' from $myftable");
         	$SQLh->execute();
 	}
 
@@ -384,7 +384,10 @@ sub producearchive {
                                 `psentity` bigint(20) NOT NULL AUTO_INCREMENT,
                                 `shanorm` char(40) NOT NULL,
                                 `shafull` char(40) NOT NULL,
-                                `uid` mediumint NOT NULL,
+				`ruid` mediumint NOT NULL,
+                                `euid` mediumint NOT NULL,
+                                `rgid` mediumint NOT NULL,
+                                `egid` mediumint NOT NULL,
                                 `pid` mediumint NOT NULL,
                                 `ppid` mediumint NOT NULL,
                                 `command` text NOT NULL,
@@ -411,7 +414,10 @@ sub producearchive {
                                 `fileaccessid` bigint(20) NOT NULL AUTO_INCREMENT,
                                 `shasum` char(40) NOT NULL,
                                 `filename` varchar(4096) NOT NULL,
-                                `uid` mediumint NOT NULL,
+				`ruid` mediumint NOT NULL,
+                                `euid` mediumint NOT NULL,
+                                `rgid` mediumint NOT NULL,
+                                `egid` mediumint NOT NULL,
                                 `command` text NOT NULL,
                                 `pid` mediumint NOT NULL,
                                 `ppid` mediumint NOT NULL,
@@ -493,9 +499,9 @@ sub producearchive {
 				#Record exists do not insert. 
 			} else {
 				#Do insert the record 
-				my $rows=$hostservh->do ("INSERT INTO $pinf (shanorm,shafull,uid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
+				my $rows=$hostservh->do ("INSERT INTO $pinf (shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
 					. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]',$fields[7],"
-					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]')" );
+					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]','$fields[16]','$fields[17]','$fields[18]')" );
 				if (($rows==-1) || (!defined($rows))) {
                                 	print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM file data SQL insert for process data. No archive process record was altered. Record $line was not registered.\n";
                         	}
@@ -523,9 +529,9 @@ sub producearchive {
 				 #Record exists do not insert.
 			} else {
 				#Do insert the record
-				my $rows=$hostservh->do ("INSERT INTO $finf (shasum,filename,uid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
+				my $rows=$hostservh->do ("INSERT INTO $finf (shasum,filename,uid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
 					. "VALUES ('$fields[1]',$fields[2],'$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
-					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]')" );
+					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]','$fields[16]','$fields[17]')" );
 				if (($rows==-1) || (!defined($rows))) {
 					print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM file data SQL insert for file data. No archive process record was altered. Record $line was not registered.\n";
 				}
