@@ -39,7 +39,7 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 * Ubuntu 18.04 LTS/20.04 LTS/22.04.1 LTS
 
 For the server part, we recommend:
-* Fedora 34/35 with a MariaDB (versions 10.4 and 10.5) RDBMS backend.
+* Fedora 35/36 with a MariaDB (versions 10.5 and 10.6) RDBMS backend.
 
 Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.36.0)). 
 
