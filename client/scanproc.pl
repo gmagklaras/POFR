@@ -137,7 +137,7 @@ while (1==1) {
 	 	my $cmdline=<CMD>;
 	 	close(CMD);
 	 	if (!(defined $cmdline))  { $cmdline="--NOCMDARGENTRY--";}
-		open my $fh, "<", "/proc/$proc/status" or die $!
+		open my $fh, "<", "/proc/$proc/status" or die $!;
 
 		my %hash;
 
