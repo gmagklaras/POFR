@@ -137,70 +137,34 @@ while (1==1) {
 	 	my $cmdline=<CMD>;
 	 	close(CMD);
 	 	if (!(defined $cmdline))  { $cmdline="--NOCMDARGENTRY--";}
-		open(STA, "<","/proc/$proc/status");
-	 	my @ppida=<STA>;
-		#Depending on the version of the Linux kernel the structure
-                #of /proc/pid/status differs. Earlier Linux kernels (2.6.x)
-                #seem to contain the Ppid field on the fifth line [pos 4 starting from 0].
-		#Newer kernels (3.10.x and 4.x and 5.x) seem to have it in the seventh line [pos 6 starting from zero]
-	 	my @ppidstr=split ":", $ppida[6];
-		my $ppid;
-		if ( $ppidstr[0] eq 'PPid') {
-			#We are dealing with a 3.10.x or 4.x kernel
-			$ppid=$ppidstr[1]; 
-		} else {
-			#We are dealing with a 2.6.x older kernel
-			my @oldppidstr=split ":", $ppida[4];
-			$ppid=$oldppidstr[1];
+		open my $fh, "<", "/proc/$proc/status" or die $!
+
+		my %hash;
+
+		while (my $line=<$fh>) {
+    		chomp($line);
+    		(my $field,my $value) = split /:/, $line;
+    		$hash{$field} = $value;
 		}
+	
+		close $fh;
 
-	 	my @namea=split ":", $ppida[0];
-	 	my $name=$namea[1];
-	 	#Remove white space from $ppid and $name
-	 	$ppid=~ s/(^\s+|\s+$)//g;
-	 	$name=~ s/(^\s+|\s+$)//g;
-		my $ruid;
-                my $euid;
-                my $rgid;
-                my $egid;
-                my @struid;
-                my @strgid;
-                my @parseduid;
-                my @parsedgid;
-	 	@struid=split ":", $ppida[6];
-	 	#Depending on the version of the Linux kernel the structure
-	 	#of /proc/pid/status differs. Earlier Linux kernels (2.6.x)
-	 	#seem to contain the uid field in the seventh line [pos 6 starting from 0]. 
-	 	#However, newer 4.x kernels have it in the ninth line [pos 8 starting from 0].
-	 	#Thus, we check we are getting data from the right field here. 
-		@parseduid=split "\t", $struid[1];
-		if ( $parseduid[0] eq 'Uid') {
-			#We are dealing with an older 2.6.x Linux kernel  
-			$ruid=$parseduid[1];
+		my $ppid=$hash{'PPid'};
+		my $name=$hash{'Name'};
+		#Remove white space from $ppid and $name
+		$ppid=~ s/(^\s+|\s+$)//g;
+		$name=~ s/(^\s+|\s+$)//g;
 
-	 	} else { 
-			#We are dealing with a 4.x/5.x Linux kernel and thus
-			#we fish for the Uid field on the 9th line from the top. 
-			#we fish for the Gid field on the 10th line from the top.
-	 	        @struid=split ":", $ppida[8];
-                        @strgid=split ":", $ppida[9];
-                        @parseduid=split "\t", $struid[1];
-                        @parsedgid=split "\t", $strgid[1];
-                        $ruid=$parseduid[1];
-                        $euid=$parseduid[2];
-                        $rgid=$parsedgid[1];
-                        $egid=$parsedgid[2];
-
-	 	} #end of $euid[0]...
-		
-		close(STA);
-
-
-	 	#Remove any new line characters from all the real and effective uid and gid data
-	 	chomp $ruid;
-		chomp $euid;
-		chomp $rgid;
-		chomp $egid;
+		#Remove the first white space charater from the hash string and then
+		#split using white space as the separator
+		my @struid=split(/\s+/, substr$hash{'Uid'},1);
+		my @strgid=split(/\s+/, substr$hash{'Gid'},1);
+		#the Uid: and Gid: fields of /proc/[pid]/status have currently the following form:
+		#Uid, Gid: Real, effective, saved set, and file system UIDs (GIDs). 
+		my $ruid=$struid[0];
+		my $euid=$struid[1];
+		my $rgid=$strgid[0];
+		my $egid=$strgid[1];
 	 	
 		opendir(FDD, "/proc/$proc/fd");
 	 	my @fds = grep { /^[1-9][0-9]*/  } readdir(FDD);
