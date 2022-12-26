@@ -137,14 +137,14 @@ while (1==1) {
 	 	my $cmdline=<CMD>;
 	 	close(CMD);
 	 	if (!(defined $cmdline))  { $cmdline="--NOCMDARGENTRY--";}
-		open my $fh, "<", "/proc/$proc/status" or die $!;
+		open my $fh, "<", "/proc/$proc/status";
 
 		my %hash;
 
 		while (my $line=<$fh>) {
-    		chomp($line);
-    		(my $field,my $value) = split /:/, $line;
-    		$hash{$field} = $value;
+    			chomp($line);
+    			(my $field,my $value) = split /:/, $line;
+    			$hash{$field} = $value;
 		}
 	
 		close $fh;
