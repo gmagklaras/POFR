@@ -529,7 +529,7 @@ sub producearchive {
 				 #Record exists do not insert.
 			} else {
 				#Do insert the record
-				my $rows=$hostservh->do ("INSERT INTO $finf (shasum,filename,uid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
+				my $rows=$hostservh->do ("INSERT INTO $finf (shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
 					. "VALUES ('$fields[1]',$fields[2],'$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
 					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]','$fields[16]','$fields[17]')" );
 				if (($rows==-1) || (!defined($rows))) {
