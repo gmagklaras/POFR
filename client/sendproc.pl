@@ -86,41 +86,6 @@ my @previterationtarballs;
 my @ftpscp;
 my @ftpscpnet;
 
-#Send immediately any remaining tar files from crashed sessions to the server
-opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-@crashleftovertarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
-closedir(DIR);
-
-if ( @crashleftovertarballs == 0) {
-	#The array is empty do nothing 
-	print "The array is empty! \n";
-} else {
-	my $ssh = Net::OpenSSH->new($server, user => $username, password => $password, master_opts => [-o => "StrictHostKeyChecking=no"] );
-	if ( $ssh->error == 0 ) {
-        	print "sendproc.pl: Success in SSH connection for leftover tarballs. Sending them. \n";
-		foreach my $leftovertarball (@crashleftovertarballs) {
-			#Send and cleanup
-			$ssh->scp_put({quiet=>0}, "/dev/shm/$leftovertarball", "/home/$username/");
-			unlink ("/dev/shm/$leftovertarball");
-			} #end of foreach
-	} else {
-		print "sendproc.pl: Warning: Oops, missed a leftover tarball ssh connection!Will try again in $postponetime microseconds!";
-        	usleep($postponetime);
-		foreach my $leftovertarball (@crashleftovertarballs) {
-                	#Send and cleanup
-                	$ssh->scp_put({quiet=>0}, "/dev/shm/$leftovertarball", "/home/$username/");
-			if ( $ssh->error == 0 ) {
-                		unlink ("/dev/shm/$leftovertarball");
-			} else {
-				system "./stopclient.pl";
-				die "sendproc.pl Error: Unable to initiate a leftover tarball connection. CLIENT SHUTDOWN initiated. Bye! \n";
-			}	
-                } #end of foreach
-
-	} # end of $ssh->error == 0 else
- 
-} #end of if (crashleftovertarballs == 0) ...
-
 # Initial Wait for the data set to build up
 usleep($initialdatabuildwait);
 
@@ -142,6 +107,44 @@ if ($firstssh->error == 0 && $nodealhits < 3 ) {
 	die "sendproc.pl Error: Unable to initiate an initial server SSH connection. CLIENT SHUTDOWN initiated. Bye! \n";
 }
 
+sub detectandsendleftovers {
+	opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
+	@crashleftovertarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
+	closedir(DIR);
+
+	if ( @crashleftovertarballs == 0) {
+        	#The array is empty do nothing
+        	print "The array is empty! \n";
+	} else {
+        	my $ssh = Net::OpenSSH->new($server, user => $username, password => $password, master_opts => [-o => "StrictHostKeyChecking=no"] );
+        	if ( $ssh->error == 0 ) {
+                	print "sendproc.pl: detectandsendleftovers subroutine: Success in SSH connection for leftover tarballs. Sending them. \n";
+                	foreach my $leftovertarball (@crashleftovertarballs) {
+                        	#Send and cleanup
+                        	$ssh->scp_put({quiet=>0}, "/dev/shm/$leftovertarball", "/home/$username/");
+                        	unlink ("/dev/shm/$leftovertarball");
+                        } #end of foreach
+        	} else {
+                	print "sendproc.pl: detectandsendleftovers subroutine: Warning: Oops, missed a leftover tarball ssh connection!Will try again in $postponetime microseconds!";
+                	usleep($postponetime);
+                	foreach my $leftovertarball (@crashleftovertarballs) {
+                        	#Send and cleanup
+                        	$ssh->scp_put({quiet=>0}, "/dev/shm/$leftovertarball", "/home/$username/");
+                       		 if ( $ssh->error == 0 ) {
+                                	unlink ("/dev/shm/$leftovertarball");
+                        	 } else {
+                                	system "./stopclient.pl";
+                                	die "sendproc.pl Error: detectandsendleftovers: Unable to initiate a leftover tarball connection. CLIENT SHUTDOWN initiated. Bye! \n";
+                        	 }
+                	} #end of foreach
+
+        	} # end of $ssh->error == 0 else
+
+	} #end of if (crashleftovertarballs == 0) ...
+
+
+} #End of detectandsendleftovers subroutine
+
 sub sendfiles {
 	my $server=shift;
 	my $username=shift;
@@ -151,7 +154,9 @@ sub sendfiles {
 	$nodealhits=0;
 
 	while (1==1) {
-
+		
+		#First attempt to send a list of any leftovers
+		detectandsendleftovers();
 		#Get a list of the POFR scanned proc and net entries
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!"; 
 		@sampledprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc.gz/  } readdir(DIR);
@@ -172,7 +177,7 @@ sub sendfiles {
 			my $ssh = Net::OpenSSH->new($server, user => $username, password => $password, master_opts => [-o => "StrictHostKeyChecking=no"] );
 			if ( $ssh->error == 0 ) {
                 		$nodealhits=0;
-                		print "sendproc.pl: Success in SSH connection for leftover tarballs inside the while loop. Sending them. \n";
+                		print "sendproc.pl: main while loop: Success in SSH connection for leftover tarballs inside the while loop. Sending them. \n";
 				foreach my $leftoverwhileloop (@crashleftovertarballs) {
                         		#Send and cleanup
                         		$ssh->scp_put({quiet=>0}, "/dev/shm/$leftoverwhileloop", "/home/$username/");
@@ -180,7 +185,7 @@ sub sendfiles {
                         	} #end of foreach
 				undef @previterationtarballs;
 			} else {
-                		print "sendproc.pl: Warning: Oops, missed an inner while loop leftover tarball ssh connection!Will try again in $postponetime microseconds!";
+                		print "sendproc.pl: main while loop: Warning: Oops, missed an inner while loop leftover tarball ssh connection!Will try again in $postponetime microseconds!";
                 		usleep($postponetime);
 				foreach my $leftoverwhileloop (@crashleftovertarballs) {
                                         #Send and cleanup
@@ -189,7 +194,7 @@ sub sendfiles {
 						unlink ("/dev/shm/$leftoverwhileloop");
                                         } else {
 						system "./stopclient.pl";
-						die "sendproc.pl Error: Unable to initiate an inner while loop leftover tarball upload server SSH connection. CLIENT SHUTDOWN initiated. Bye! \n";
+						print "sendproc.pl Error: Unable to initiate an inner while loop leftover tarball upload server SSH connection. Will defer to the next loop cycle of calling detectandsendleftovers(). \n";
 					}
 				} #end of foreach
 			} #end of if ( $ssh->error == 0 ) else
