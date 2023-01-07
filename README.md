@@ -56,7 +56,7 @@ POFR distributes a copy of the IP2Location™ Lite, an open source geolocation d
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
 
-The latest production release of POFR is v1.1.0 named "Lorinda Cherry" (Feb 27 2022). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
+The latest production release of POFR is v1.2.1 named "Hedy Lamarr" (Oct 23, 2022). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
 
 The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
 

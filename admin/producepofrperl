@@ -1,6 +1,7 @@
 #producepofrperl -- Simple bash script to create a POFR Perl release from source with all the modules
-#Currently based on Perl 5.36.1
+#Currently based on Perl 5.36.0
 #George Magklaras -- Steelcyber Scientific
+#Copyright (C) 2021,2022,2023 Georgios Magklaras
 
 echo "#################################"
 echo "#Starting the POFR PERL build   #"
