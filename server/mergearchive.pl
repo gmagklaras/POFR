@@ -490,7 +490,7 @@ sub producearchive {
 			chomp $line;
                		my @fields = split "###" , $line;
 			#There might be special characters on the command line arguments, so quote them
-			$fields[7]=$hostservh->quote($fields[7]);
+			$fields[10]=$hostservh->quote($fields[10]);
 			#Here we need to find duplicate records before we insert
 			my $SQLph=$hostservh->prepare("SELECT COUNT(*) FROM $pinf WHERE shanorm='$fields[1]' ");
 			$SQLph->execute();
@@ -500,8 +500,8 @@ sub producearchive {
 			} else {
 				#Do insert the record 
 				my $rows=$hostservh->do ("INSERT INTO $pinf (shanorm,shafull,ruid,euid,rgid,egid,pid,ppid,command,arguments,tzone,cyear,cmonth,cday,cmin,chour,csec,cmsec)"
-					. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]',$fields[7],"
-					. "'$fields[8]','$fields[9]','$fields[10]','$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]','$fields[16]','$fields[17]','$fields[18]')" );
+					. "VALUES ('$fields[1]','$fields[2]','$fields[3]','$fields[4]','$fields[5]','$fields[6]','$fields[7]',"
+					. "'$fields[8]','$fields[9]',$fields[10],'$fields[11]','$fields[12]','$fields[13]','$fields[14]','$fields[15]','$fields[16]','$fields[17]','$fields[18]')" );
 				if (($rows==-1) || (!defined($rows))) {
                                 	print "mergearchives.pl Error: Inside the producearchive subroutine: User $usertoprocess: Inside the IN MEM file data SQL insert for process data. No archive process record was altered. Record $line was not registered.\n";
                         	}
