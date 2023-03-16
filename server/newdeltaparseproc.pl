@@ -109,15 +109,15 @@ $SQLh->finish();
 $lhltservh->disconnect;
 
 #Not all hosts/users will need processing. Only the ones that have the proper number of .tar files 
-#uploaded in the home dirs AND they do not have a .luarmthread and .merge file present. Having the
-#.luarmthread file present implies an already active forked parseproc.pl thread, a .merge shows mething. In that case 
+#uploaded in the home dirs AND they do not have a .pofrthread and .merge file present. Having the
+#.pofrthread file present implies an already active forked parseproc.pl thread, a .merge shows mething. In that case 
 #we consider the user directory as inactive (no new data to process). 
 my @activeusers;
 foreach my $user (@cidhits) {
     	
     	opendir(DIR, "/home/$user") || die "parseproc Error: can't open user directory /home/$user: $!";
 		my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
-		my @threadflags = glob ("/home/$user/.luarmthread*");
+		my @threadflags = glob ("/home/$user/.pofrthread*");
 		my $tarnums=scalar @myprocfiles;
 		my $threadfsize=scalar @threadflags;
 		print "user $user:size of myprocfiles is $tarnums and of of threadflags is $threadfsize \n";
@@ -905,7 +905,7 @@ sub parsefiles {
 	#Raise the processing flag to mark to forked procuser procs that they
 	#should not touch this directory until we are done.
 	my $pspid="$$";
-	open(my $procflagfh, ">" ,"/home/$user/.luarmthread$timeref$pspid") or die "parseproc.pl Error: Could not open the .procflag file for writing due to: $!";
+	open(my $procflagfh, ">" ,"/home/$user/.pofrthread$timeref$pspid") or die "parseproc.pl Error: Could not open the .procflag file for writing due to: $!";
 	print $procflagfh "$pspid";
 	close $procflagfh;
 		
@@ -1011,7 +1011,7 @@ sub parsefiles {
 		rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
 		rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
 		rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath: $!";
-		unlink "/home/$user/.luarmthread$timeref$pspid" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the .luarmthread file for user $user due to: $!";
+		unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the .pofrthread file for user $user due to: $!";
 		die "Thread $thnumber for user $user: Totally empty files means that we have to exit and clean up early. \n";
 	}
 
@@ -1704,9 +1704,9 @@ sub parsefiles {
 
        } #end of my $fitopr (@mynetfiles)
 	
-	#And finally we are done by removing the .luarmthread file to signal that the dir is ready for another procparse.pl process
+	#And finally we are done by removing the .pofrthread file to signal that the dir is ready for another procparse.pl process
 	#to start processing data again.
-	unlink "/home/$user/.luarmthread$timeref$pspid" or warn "parseproc.pl Warning: Could not unlink the .luarmthread file for user $user due to: $!";
+	unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Could not unlink the .pofrthread file for user $user due to: $!";
 
 	#Disconnect from the host database
 	$hostservh->disconnect;

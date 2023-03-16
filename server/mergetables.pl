@@ -123,7 +123,7 @@ if (!(-e "/dev/shm/luarmserver/$usertoprocess" && "/dev/shm/luarmserver/$usertop
 }
 
 #Sanity check - Does the user have POFR server threads and/or merge process flags?
-my @threadflags = glob ("/home/$usertoprocess/.luarmthread*");
+my @threadflags = glob ("/home/$usertoprocess/.pofrthread*");
 my $threadfsize=scalar @threadflags;
 if ( ($threadfsize == 0) && !(-e "/home/$usertoprocess/.merge")) {
 	print "mergetables.pl STATUS: main part: User $usertoprocess clear of active processing or merge threads, continuing...\n";
@@ -189,7 +189,7 @@ sub mergetables {
 	my $ldb=shift;
 
 	#Check again to detect a race with the parseprocthreads
-	my @racehazardflags = glob ("/home/$usertomerge/.luarmthread*");
+	my @racehazardflags = glob ("/home/$usertomerge/.pofrthread*");
         my $rhflagsize=scalar @racehazardflags;
 	if ( ($rhflagsize != 0)) {
 		unlink "/home/$usertomerge/.merge" or warn "mergetables.pl Warning: Could not unlink the .merge file for user $usertomerge due to: $!";		
@@ -369,7 +369,7 @@ sub archivetables {
 	my $ldb=shift;
 
 	#Check again for race hazards with the parseproc.pl threads	
-	my @racehazardflags = glob ("/home/$usertomerge/.luarmthread*");
+	my @racehazardflags = glob ("/home/$usertomerge/.pofrthread*");
         my $rhflagsize=scalar @racehazardflags;
         if ( ($rhflagsize != 0) ) {
                 unlink "/home/$usertomerge/.merge" or warn "mergetables.pl Warning: Inside the archivetables subroutine: Could not unlink the .merge file for user $usertomerge due to: $!";
