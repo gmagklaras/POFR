@@ -254,7 +254,7 @@ sub filerefprocess {
 									#File exists, do nothing
 								} else {
 									#File is observed for the first time, insert it.
-									if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+									if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 										#irrelevant name, throw it away 
 									} else {
 										my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -287,7 +287,7 @@ sub filerefprocess {
                                                         foreach my $pfile (@pfarray) {
                                                         	my $sanitizedpf=sanitize_filename($pfile);
 								
-                                                                if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+                                                                if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -351,7 +351,7 @@ sub filerefprocess {
 								#File exists, do nothing
 							} else {
 								#File is observed for the first time, insert it.
-								if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+								if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#irrelevant name, throw it away 
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -359,7 +359,7 @@ sub filerefprocess {
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
-								} #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
+								} #end of if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
 							} #end of if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") else ...
 						} #end of foreach my $pf (@procfilehits) ...
 					} #end of if ( $psinfoshafullhits[0]>="1" ) else ...
@@ -391,7 +391,7 @@ sub filerefprocess {
                                                         my @pfarray=split(" ",$procfiles);
                                                         foreach my $pfile (@pfarray) {
                                                                 my $sanitizedpf=sanitize_filename($pfile);
-								if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+								if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -401,7 +401,7 @@ sub filerefprocess {
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
-								} #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
+								} #end of if ( ($sanitizedpf eq POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
 							} #end of foreach my $pfile (@pfarray)
 						} #end of if ( $sofprocfiles >= 3)
 					} #end of if ( $ptableshahits[0]>="1" ) else ...
@@ -543,7 +543,7 @@ sub fileothprocess {
 									#File exists, do nothing
 								} else {
 									#File is observed for the first time, insert it.
-									if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+									if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 										#irrelevant name, throw it away
 									} else {
 										my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -574,7 +574,7 @@ sub fileothprocess {
                                                         my @pfarray=split(" ",$procfiles);
                                                         foreach my $pfile (@pfarray) {
                                                                 my $sanitizedpf=sanitize_filename($pfile);
-                                                                if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+                                                                if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -637,7 +637,7 @@ sub fileothprocess {
 								#File exists, do nothing
 							} else {
 								#File is observed for the first time, insert it.
-								if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+								if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#irrelevant name, throw it away 
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -645,7 +645,7 @@ sub fileothprocess {
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
-                                                                } #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
+                                                                } #end of if ( ($sanitizedpf eq "PODRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else ...
 							} #end of if ( $mergedfileinfohits[0] >= "1" || $fileinfohits[0] >= "1") else ...
 						} #end of foreach my $pf (@procfilehits) ...
 					 } #end of if ( $psinfoshafullhits[0]>="1" ) else ...
@@ -677,7 +677,7 @@ sub fileothprocess {
                                                         my @pfarray=split(" ",$procfiles);
                                                         foreach my $pfile (@pfarray) {
                                                                 my $sanitizedpf=sanitize_filename($pfile);
-                                                                if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
+                                                                if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) {
 									#Throw away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
@@ -687,7 +687,7 @@ sub fileothprocess {
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
-                                                                } #end of if ( ($sanitizedpf eq "LUARMv2NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
+                                                                } #end of if ( ($sanitizedpf eq "POFRv1NOOPENFILES") || ($sanitizedpf =~ /^'/) ) else...
 							} #end of foreach my $pfile (@pfarray)
 						} #end of if ( $sofprocfiles >= 3)
 					} #end of if ( $tableshahits[0]>="1" ) else ...

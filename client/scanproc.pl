@@ -176,7 +176,7 @@ while (1==1) {
     
     		if ($#openfiles=='-1') {
 			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###LUARMv2NOOPENFILES \n"); } 
+			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###POFRv1NOOPENFILES \n"); } 
 		else { 
 			select $WRDZ;
 			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles \n"); 
