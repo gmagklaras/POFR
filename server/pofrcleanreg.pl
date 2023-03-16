@@ -52,7 +52,7 @@ if ($whoami[2]!=0 && $whoami[3]!=0);
 
 #Sanity checks
 opendir(DIR, $reghome) || die "pofrcleanreg.pl Error:can't open client registration directory: $!";
-my @requests = grep { /^.*luarm$/ } readdir(DIR);
+my @requests = grep { /^.*pofr$/ } readdir(DIR);
 closedir(DIR);
 
 sub dispusage {

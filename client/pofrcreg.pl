@@ -103,18 +103,18 @@ print "$cidstr \n";
 #be local to the directory. No interference with localy generated root keys
 #under /root/.ssh/. This keys are exclusively only for the POFR client-server
 #session.
-system "ssh-keygen -q -t rsa -b 4096 -N $cidstr -f ./luarm_rsa";
+system "ssh-keygen -q -t rsa -b 4096 -N $cidstr -f ./pofr_rsa";
 
 #Check that we have proper RSA key generation
-die "pofrcreg.pl Error:Could not generate RSA keys: $!\n" if (! (-e "./luarm_rsa.pub")); 
+die "pofrcreg.pl Error:Could not generate RSA keys: $!\n" if (! (-e "./pofr_rsa.pub")); 
 
 #Read the Public RSA key
-open(RSA, "<","./luarm_rsa.pub");
+open(RSA, "<","./pofr_rsa.pub");
 my $rsapub=<RSA>;
 close(RSA);
 
 #Create the request file with all the necessary data
-open(RQF, ">", "./request$cidstr.luarm") or die "pofrcreg Error: Cannot create the request file: $! \n";
+open(RQF, ">", "./request$cidstr.pofr") or die "pofrcreg Error: Cannot create the request file: $! \n";
 select RQF;
 print "$clienthostname#$clientipaddress#$uuidstr#$cidstr#$rsapub";
 close(RQF);
@@ -125,7 +125,7 @@ select STDOUT;
 #Connect to the POFR server
 print "pofrcreg: OK. Connecting to the specified POFR server: $server to send our registration request. \n ";
 my $scp=Net::SCP->new( {"host"=>$server, "user"=>$username} );
-$scp->iscp("./request$cidstr.luarm", "$username\@$server:/home/$username/") or die $scp->{errstr};
+$scp->iscp("./request$cidstr.pofr", "$username\@$server:/home/$username/") or die $scp->{errstr};
 
 print "pofrcreg: OK. Request sent successfully to server $server \n.";
 #Wait a bit and keep attempting to obtain the response file from the server
@@ -169,7 +169,7 @@ if ($result eq "Status:GRANTED") {
 }
 
 #Eventually cleanup any left over request files
-unlink glob "./*.luarm";
+unlink glob "./*.pofr";
 
 
 

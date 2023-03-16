@@ -42,7 +42,7 @@ my $userhome="/home";
 
 #Sanity checks
 opendir(DIR, $reghome) || die "pofrsreg.pl Error:can't open client registration directory: $!";
-my @requests = grep { /^.*luarm$/ } readdir(DIR);
+my @requests = grep { /^.*pofr$/ } readdir(DIR);
 closedir(DIR);
 
 #Does the system have an scponly shell?
@@ -90,7 +90,7 @@ foreach my $req (@requests) {
 			close(RESP);
 			
 			#Clean up the request and response files. The POFR client will have to send a new one, after the old DB record is dropped.
-			unlink "$reghome/request$cid.luarm" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.luarm after non effective registration for client $uuid: $! \n";
+			unlink "$reghome/request$cid.pofr" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.pofr after non effective registration for client $uuid: $! \n";
 			
 			die "pofrsreg.pl Error: Client with uuid:$uuid is ALREADY registered in the LHLT database! I cannot register this client, sorry. \n You will need to drop the database record first. \n"; 
 			#$SQLh->finish();
@@ -128,7 +128,7 @@ foreach my $req (@requests) {
 			close(RESP);
 
 			#Clean up the request and response files, now we are done with it
-			unlink "$reghome/request$cid.luarm" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.luarm after registering client $uuid: $! \n";
+			unlink "$reghome/request$cid.pofr" or warn "pofrsreg.pl Warning: Could not remove request file request$cid.pofr after registering client $uuid: $! \n";
 	
 			select STDOUT;
 

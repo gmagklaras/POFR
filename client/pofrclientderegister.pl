@@ -108,7 +108,7 @@ sub deregisterclient {
 	print "pofrclientderegister.pl STATUS: Inside the unregisterclient subroutine: Stopping all POFR client ACTIVE processes. \n";
 	system "echo \$PWD; ./stopclient.pl";
 	print "pofrclientderegister.pl STATUS: Removing all relevant files now \n";
-	system "echo \$PWD; rm luarm* .lcaf.dat response*";
+	system "echo \$PWD; rm pofr* .lcaf.dat response*";
 	print "pofrclientderegister.pl STATUS: All done. This removed all POFR client registration files and stopped active processes. \n";
 	print "pofrclientderegister.pl STATUS: Don't forget to run the pofrcleanreg.pl on the *POFR server* to fully complete the process of deregistering the client. \n";
 	print "pofrclientderegister.pl STATUS: The exact command you need to type on the POFR server is: \n";
