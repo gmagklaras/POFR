@@ -117,9 +117,9 @@ if ((-e "/home/$usertoprocess") && -d ("/home/$usertoprocess")) {
 	die "mergetables Error: main part: Could not find the filesystem directory for user $usertoprocess. Are you sure the filesystem directory is not out of sync with the lhltable contents? \n";
 }
  
-#Sanity check - Do we have a proper /dev/shm/luarmserver directory created for the user?
-if (!(-e "/dev/shm/luarmserver/$usertoprocess" && "/dev/shm/luarmserver/$usertoprocess")) {
-	mkdir "/dev/shm/luarmserver/$usertoprocess" or die "mergetables.pl Error: main part: Cannot create user $usertoprocess directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
+#Sanity check - Do we have a proper /dev/shm/pofrerver directory created for the user?
+if (!(-e "/dev/shm/pofrerver/$usertoprocess" && "/dev/shm/pofrerver/$usertoprocess")) {
+	mkdir "/dev/shm/pofrerver/$usertoprocess" or die "mergetables.pl Error: main part: Cannot create user $usertoprocess directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $! \n";
 }
 
 #Sanity check - Does the user have POFR server threads and/or merge process flags?
@@ -386,32 +386,32 @@ sub archivetables {
         my $selinuxmode=`/usr/sbin/getenforce`;
         chomp($selinuxmode);
 	
-	#Check to see if the /dev/shm/luarmserver/[userid]/temp
-	if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") {
-                print "mergetables.pl STATUS: Inside the archivetables subroutine: Starting up, detected /dev/shm/luarmserver/$usertomerge/temp dir...\n";
+	#Check to see if the /dev/shm/pofrerver/[userid]/temp
+	if (-e "/dev/shm/pofrerver/$usertomerge/temp" && -d "/dev/shm/pofrerver/$usertomerge/temp") {
+                print "mergetables.pl STATUS: Inside the archivetables subroutine: Starting up, detected /dev/shm/pofrerver/$usertomerge/temp dir...\n";
                 if ($selinuxmode eq "Enforcing") {
                         print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Detected SELinux in Enforcing mode, good! Thus ensuring that the temp dir has the right target context...\n";
-                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
-                        system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/pofrerver/$usertomerge/temp";
+                        system "/usr/sbin/restorecon -v /dev/shm/pofrerver/$usertomerge/temp";
                 } else {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode...\n";
                 } #end of if ($selinuxmode eq "Enforcing") else
 	} else {
-                print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Starting up, not detected the /dev/shm/luarmserver/$usertomerge/temp dir.\n";
+                print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Starting up, not detected the /dev/shm/pofrerver/$usertomerge/temp dir.\n";
                 print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: First time we create archive tables for user $usertomerge, thus creating the temp dir...\n";
-                mkdir "/dev/shm/luarmserver/$usertomerge/temp" or die "mergetables.pl Error: Inside the archivetables subroutine: Cannot create /dev/shm/luarmserver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
-		system "chown -R mysql /dev/shm/luarmserver/$usertomerge/temp";
-		system "chmod 755 /dev/shm/luarmserver/$usertomerge/temp";
+                mkdir "/dev/shm/pofrerver/$usertomerge/temp" or die "mergetables.pl Error: Inside the archivetables subroutine: Cannot create /dev/shm/pofrerver/$usertomerge/temp. Full disk or other I/O issue? : $! \n";
+		system "chown -R mysql /dev/shm/pofrerver/$usertomerge/temp";
+		system "chmod 755 /dev/shm/pofrerver/$usertomerge/temp";
 
                 if ($selinuxmode eq "Enforcing") {
                         print "mergetables.pl STATUS: Inside the archivetables subroutine: User $usertomerge: Detected SELinux in Enforcing mode, good! Thus ensuring that the newly created temp dir has the right target context...\n";
-                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/luarmserver/$usertomerge/temp";
-                        system "/usr/sbin/restorecon -v /dev/shm/luarmserver/$usertomerge/temp";
+                        system "/usr/sbin/semanage fcontext -a -t mysqld_db_t /dev/shm/pofrerver/$usertomerge/temp";
+                        system "/usr/sbin/restorecon -v /dev/shm/pofrerver/$usertomerge/temp";
                 } else {
                         print "mergetables.pl STATUS: User $usertomerge: Inside archivetables function: Detected SELinux not to be in Enforcing mode, OK, but it would be better to have it in Enforcing mode.Just created the temp dir and proceeding... \n";
                 } #end of if ($selinuxmode eq "Enforcing") else
 
-	} #end of if (-e "/dev/shm/luarmserver/$usertomerge/temp" && -d "/dev/shm/luarmserver/$usertomerge/temp") else
+	} #end of if (-e "/dev/shm/pofrerver/$usertomerge/temp" && -d "/dev/shm/pofrerver/$usertomerge/temp") else
 
 
 	#Connect to the database
@@ -474,9 +474,9 @@ sub archivetables {
 	#Now, we have to read all the already existing merged tables in memory, because we are going to drop them later,
 	#to clean up the database.
 	#Form a unique name for the files;
-	my $pdatafile="/dev/shm/luarmserver/$usertomerge/temp/psdata".$pmergedstring.$usertomerge;
-	my $fdatafile="/dev/shm/luarmserver/$usertomerge/temp/filedata".$pmergedstring.$usertomerge;
-	my $netdatafile="/dev/shm/luarmserver/$usertomerge/temp/netdata".$pmergedstring.$usertomerge;
+	my $pdatafile="/dev/shm/pofrerver/$usertomerge/temp/psdata".$pmergedstring.$usertomerge;
+	my $fdatafile="/dev/shm/pofrerver/$usertomerge/temp/filedata".$pmergedstring.$usertomerge;
+	my $netdatafile="/dev/shm/pofrerver/$usertomerge/temp/netdata".$pmergedstring.$usertomerge;
 	
 	#Export the data into CSV files residing in RAM;
 	#obviously the order we SQL select the fields is important and needs to match that on of the table definition ( see @archivesql)

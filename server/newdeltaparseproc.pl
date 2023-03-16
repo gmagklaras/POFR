@@ -64,10 +64,10 @@ if ($whoami[2]!=0 && $whoami[3]!=0);
 
 #Does the POFR server directory exists under /dev/shm/luamserver
 #(necessary for the net files processing) 
-if (-e "/dev/shm/luarmserver" && -d "/dev/shm/luarmserver") {
-        print "parseproc.pl: Detected /dev/shm/luarmserver dir...Starting up! \n";} else {
-        print "parseproc.pl Error: Could not detect /dev/shm/luarmserver/net dir...Fresh boot? Creating it... \n";
-        mkdir "/dev/shm/luarmserver";
+if (-e "/dev/shm/pofrerver" && -d "/dev/shm/pofrerver") {
+        print "parseproc.pl: Detected /dev/shm/pofrerver dir...Starting up! \n";} else {
+        print "parseproc.pl Error: Could not detect /dev/shm/pofrerver/net dir...Fresh boot? Creating it... \n";
+        mkdir "/dev/shm/pofrerver";
 
 }
 
@@ -1168,39 +1168,39 @@ sub parsefiles {
 	#Are we the first thread?
 	if ( $thnumber==1) {
 		#If yes, make the user dirs (if they do not exist) and also your own thread specific subdirs as required
-		if (!(-e "/dev/shm/luarmserver/$user" && "/dev/shm/luarmserver/$user")) {
-			mkdir "/dev/shm/luarmserver/$user" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
-			mkdir "/dev/shm/luarmserver/$user/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/net directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $!\n"; 
+		if (!(-e "/dev/shm/pofrerver/$user" && "/dev/shm/pofrerver/$user")) {
+			mkdir "/dev/shm/pofrerver/$user" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $! \n";
+			mkdir "/dev/shm/pofrerver/$user/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/net directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $!\n"; 
 			print "Thread 1: made the /dev/shm/ user dirs, about to go to sleep for 3 secs. \n";
 			usleep(20000000);
 			print "Thread 1: Waking up from a 3 sec sleep, and about to make the thread 1 subdir for the first time. \n"; 
-			mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1 (is really $thnumber) FIRST TIME: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/luarmserver. Full memory or other I/O issue? : $! \n";
-                mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
-			$pseudoprocdir="/dev/shm/luarmserver/$user/$firststamp-$laststamp/net";
-			$netparsedir="/dev/shm/luarmserver/$user/$firststamp-$laststamp";
+			mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1 (is really $thnumber) FIRST TIME: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrerver. Full memory or other I/O issue? : $! \n";
+                mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $! \n";
+			$pseudoprocdir="/dev/shm/pofrerver/$user/$firststamp-$laststamp/net";
+			$netparsedir="/dev/shm/pofrerver/$user/$firststamp-$laststamp";
 		} else {
  			#Otherwise as thread 1 make only your thread specific  subdirs (the next time thread 1 is invoked after the first time)
- 			mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
-                	mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/luarmserver. Full memory or other I/O issue?: $! \n";
-			$pseudoprocdir="/dev/shm/luarmserver/$user/$firststamp-$laststamp/net";
-			$netparsedir="/dev/shm/luarmserver/$user/$firststamp-$laststamp";
+ 			mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $! \n";
+                	mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrerver. Full memory or other I/O issue?: $! \n";
+			$pseudoprocdir="/dev/shm/pofrerver/$user/$firststamp-$laststamp/net";
+			$netparsedir="/dev/shm/pofrerver/$user/$firststamp-$laststamp";
 
-		} #end of if (!(-e "/dev/shm/luarmserver/$user" && "/dev/shm/luarmserver/$user"))	
+		} #end of if (!(-e "/dev/shm/pofrerver/$user" && "/dev/shm/pofrerver/$user"))	
 		
 	} else {
 		#Here we are not the first thread, thus we are going to make only the thread subdirs.
 		#All other threads sleep for 4 secs.
 		usleep(40000000);
-		if (!(-e "/dev/shm/luarmserver/$user/$firststamp-$laststamp" && "/dev/shm/luarmserver/$user/")) {
-                        mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/luarmserver. Full memory or other I/O issue? : $!\n";
+		if (!(-e "/dev/shm/pofrerver/$user/$firststamp-$laststamp" && "/dev/shm/pofrerver/$user/")) {
+                        mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrerver. Full memory or other I/O issue? : $!\n";
                 }
 
-                if (!(-e "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net" && "/dev/shm/luarmserver/$user/net")) {
-                        mkdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/luarmserver. Full memory or other I/O issue? : $!\n";
+                if (!(-e "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net" && "/dev/shm/pofrerver/$user/net")) {
+                        mkdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrerver. Full memory or other I/O issue? : $!\n";
                 }
 
-		$pseudoprocdir="/dev/shm/luarmserver/$user/$firststamp-$laststamp/net";
-                $netparsedir="/dev/shm/luarmserver/$user/$firststamp-$laststamp";
+		$pseudoprocdir="/dev/shm/pofrerver/$user/$firststamp-$laststamp/net";
+                $netparsedir="/dev/shm/pofrerver/$user/$firststamp-$laststamp";
 	} #enf of if ( $thnumber==1) else...
 
 	 
@@ -1695,10 +1695,10 @@ sub parsefiles {
 		rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
 		rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
 		rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
-		unlink "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/luarmserver/$user/$firststamp-$laststamp/net/tcp  : $!";
-		unlink "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/luarmserver/$user/$firststamp-$laststamp/net/udp  : $!";
-		rmdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/luarmserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
-		rmdir "/dev/shm/luarmserver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/luarmserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
+		unlink "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrerver/$user/$firststamp-$laststamp/net/tcp  : $!";
+		unlink "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrerver/$user/$firststamp-$laststamp/net/udp  : $!";
+		rmdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrerver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
+		rmdir "/dev/shm/pofrerver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrerver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
 
 		}
 
