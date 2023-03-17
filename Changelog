@@ -1,3 +1,25 @@
+v1.2.2 named "Mary Jackson" (Mat 17, 2023):
+This is a bug fix and enhancement release:
+-Bug fixes:
+  -  newdeltaparseproc.pl: Corrected runtime errors from unmodified statements as a result of the modifications to include both real and effective uid/gids.
+  -  scanproc.pl: Removed all the kernel version dependency code that was parsing on the basis of the order of fields in /proc/[pid]/status. 
+     Instead we read the entire file to a hash now, and we lookup the fields as hash keys. This makes the parsing independent from the order of fields, 
+     so any changes in procfs are less likely to affect us in the future.
+  -  mergearchive.pl: Fixed an SQL INSERT statement field that was preventing the tool from functioning properly.
+  -  mergearchive.pl: Fixed the dispusage subroutine. The switch is --tspec, no longer --datespec.
+  -  sendproc.pl: Made the detectandsendleftovers() subroutine to ensure that we send leftover tarballs from bad connections as part of the send loop and not only 
+     when we start sendproc.pl. This fixes the issue of sending tarballs out of sequence and leaving them over hanging there until scripts are restarted.
+  -  mergetables.pl and mergearchive.pl: Important fix that produced a runtime crash, due to lack of quoting. We were quoting the wrong field. The field that
+     needs quooting is the arguments field. That is now fixed and tested.
+-Impovements/upgrades/compatibility issues:
+  - RHEL/AlmaLinux/RockyLinux version 9 is now a supported OS option for a POFR server.
+  - Incoprorated the scponly package as part of POFR: https://github.com/gmagklaras/POFR/pull/4
+  - Replaced all luarm -> pofr file extensions. 
+  - newdeltaparseproc.pl and scanproc.pl: Change the no open files field flag from LUARMv2NOOPENFILES to POFRv1NOOPENFILES.
+  - tuneperf.pl: Added the tuneperf.pl script for tuning the procfs sampling frequency on the client target systems. 
+  - Improved the POFR manual by adding section F5 on target system tuning techniques.
+ Because of these changes, all users are advised to unregister and re-register clients to the server after upgrading to version v1.2.2.
+ 
 v1.2.1 named "Hedy Lamarr" (Oct 23 2022):
 This is a bug fix release:
 -Bug fixes:
