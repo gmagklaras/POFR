@@ -719,7 +719,64 @@ sub fileothprocess {
       } #End of if ($remainingprocs == "1") { 
 
 } #end of fileothprocess
+
+#Were we implement the reference files for the network data
+sub filerefnet {
+        #Processes the first net file of a thread and produces the 4 net reference files
+        #1. tcp v4 2. udp v4 3. tcp v6 4. udpv6  to run the deltas against.
+        my $fitopr=shift;
+        my $thnum=shift;
+        my $threadspecificpath=shift;
+        my $tablenetname=shift;
+        my $tablefilename=shift;
+        my $ptablenetname=shift;
+        my $ptablefilename=shift;
+        my $ldb=shift;
+        my $hostname=shift;
+        my $dbusername=shift;
+        my $dbpass=shift;
+	#Debug
+        if ($thnum=="1") {
+                print "filerefnet status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: NOT DEFINED ptableprocname and ptablefilename as this is the FIRST THREAD \n";
+        } else {
+                print "filerefnet status: User $ldb: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tableprocname current thread file table $tablefilename \n";
+                print "filerefnet status: User $ldb: NOT THE FIRST THREAD: previous thread net table $ptablenetname and previous thread file table $ptablefilename \n";
+        }
+
+	my $FHLNETZ = new IO::File "<$threadspecificpath/dev/shm/$fitopr";
+        my $netbuffer;
+        my $contents;
+        gunzip $FHLNETZ => \$contents;
+
+ 	#Parse the different contents (tcp4,udp4,tcp6,udp6)
+        my ($tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
+        #Now produce the four different sections in four different reference netfiles.
+        open my $jtcp4, ">", "$pseudoprocdir/reftcp4" or die "newdeltaparseproc.pl Error: Inside the filerefnet function: Cannot create reference file for tcp v4 data. User $ldb processing client net file $fitopr : $!";
+        print $jtcp4 "$tcpdata";
+        close $jtcp4;
+        open my $jtcp6, ">", "$pseudoprocdir/reftcp6" or die "newdeltaparseproc.pl Error: Inside the filerefnet function: Cannot create reference file for tcp v6 data. User $ldb processing client net file $fitopr : $!";
+        print $jtcp6 "$tcpv6data";
+        close $jtcp6;
+        open my $judp4, ">", "$pseudoprocdir/refudp4" or die "newdeltaparseproc.pl Error: Inside the filerefnet function: Cannot create reference file for udp v4 data. User $ldb processing client net file $fitopr : $!";
+        print $judp4 "$udpdata";
+        close $judp4;
+        open my $judp6, ">", "$pseudoprocdir/refudp6" or die "newdeltaparseproc.pl Error: Inside the filerefnet function: Cannot create reference file for udp v6 data. User $ldb processing client net file $fitopr : $!";
+        print $judp6 "$udpv6data";
+        close $judp6;
  
+	#Timing issues
+        my $epochref;
+        my $epochplusmsec;
+        my @filedata=split '#',$fitopr;
+        $epochplusmsec=$filedata[0];
+        my $tzone=$filedata[1];
+        $tzone =~ s/.net.gz//;
+        my $msecs=substr $epochplusmsec, -6;
+        $epochref=substr $epochplusmsec, 0, -6;
+
+} #end of filerefnet subroutine
+
 #Here we implement the GeoIP2 location stuff
 sub pofrgeoloc {
 	my $iptogeolocate=shift;
