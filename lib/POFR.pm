@@ -39,7 +39,7 @@ our @EXPORT = qw( getdbauth dbtimestamp timestamp table_exists find_data_time_ra
 #Subroutine definitions here
 sub getdbauth {
         unless(open DBAUTH, "<./.adb.dat") {
-                die "lusreg Error:getdbauth: Could not open the .adb.dat file due to: $!";
+                die "getdbath Error:POFR.pm: Could not open the .adb.dat file due to: $!";
                 }
 
         my @localarray;
