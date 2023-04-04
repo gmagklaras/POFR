@@ -740,11 +740,11 @@ sub filerefnet {
         my $dbpass=shift;
 	#Debug
         if ($thnum=="1") {
-                print "filerefnet status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
                 print "filerefnet status: NOT DEFINED ptablenetname and ptablefilename as this is the FIRST THREAD \n";
         } else {
-                print "filerefnet status: User $ldb: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
-                print "filerefnet status: User $ldb: NOT THE FIRST THREAD: previous thread net table $ptablenetname and previous thread file table $ptablefilename \n";
+                print "filerefnet status: User $user: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: User $user: NOT THE FIRST THREAD: previous thread net table $ptablenetname and previous thread file table $ptablefilename \n";
         }
 	
 	print "filerefnet: Proceccing file $fitopr for user $user \n";
@@ -1135,8 +1135,84 @@ sub fileothnet {
         my $dbusername=shift;
         my $dbpass=shift;
 
+	#Sanity check, do we we have the reference file?
+        if ( (-e "$threadspecificpath/dev/shm/referencefile.net.gz")) {
+      		print "fileothnet: Found my reference file on thread number $thnum and path $threadspecificpath. \n";
+        } else {
+                die "fileothnet: Error: Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
+        }
 
-}
+	#Here we produce the network delta
+	print "fileothnet: Operating on file $fitopr on $user, thread number $thnum  \n";
+	#Read the latest data
+	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+	my $contentsnew;
+	gunzip $FHLNETZ => \$contentsnew;
+	my ($newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
+        #Read the reference data
+	my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net.gz", '<:utf8');
+	my $contentsref;
+	gunzip $FHLNETZREF => \$contentsref;
+	my ($reftcpdata,$reftcpv6data,$refudpdata,$refudpv6data)=split("###", $contentsref);
+
+	#TCP V4 DELTA
+	my @newtcpdatacol=split "\n", $newtcpdata;
+	my @reftcpdatacol=split "\n", $reftcpdata;
+	my @deltatcpdata=array_minus(@newtcpdatacol,@reftcpdatacol);
+
+	#TCP V6 DELTA
+	my @newtcpv6datacol=split "\n", $newtcpv6data;
+	my @reftcpv6datacol=split "\n", $reftcpv6data;
+	my @deltatcpv6data=array_minus(@newtcpv6datacol,@reftcpv6datacol);
+
+	#UDP V4 DELTA
+	my @newudpdatacol=split "\n", $newudpdata;
+	my @refudpdatacol=split "\n", $refudpdata;
+	my @deltaudpdata=array_minus(@newudpdatacol,@refudpdatacol);
+
+	#UDP V6 DELTA
+	my @newudpv6datacol=split "\n", $newudpv6data;
+	my @refudpv6datacol=split "\n", $refudpv6data;
+	my @deltaudpv6data=array_minus(@newudpv6datacol,@refudpv6datacol);
+
+	#And from now we work only with the deltas
+	#and create the psuedoproc files for the module to pass
+	my $deltatcpjoin=join("", @deltatcpdata);
+	my $deltatcpv6join=join("", @deltatcpv6data);
+	my $joinedtcpdata="$deltatcpjoin $deltatcpv6join";
+	
+	my $deltaudpjoin=join("", @deltaudpdata);
+	my $deltaudpv6join=join("", @deltaudpv6data);
+	my $joinedudpdata="$deltaudpjoin $deltaudpv6join";
+
+	#Debug
+	print "fileothnet: joinedtcpdata: @deltatcpdata \n @deltatcpv6data \n";
+	print "fileothnet: joinedudpdata: @deltaudpdata \n @deltaudpv6data \n";
+
+	open my $jtcp, ">", "$pseudoprocdir/tcp" or die "newdeltaparseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
+        print $jtcp "$joinedtcpdata";
+        close $jtcp;
+        open my $judp, ">", "$pseudoprocdir/udp" or die "newdeltaparseproc.pl Error: Cannot create pseudoproc file for udpdata. User $user processing client file $fitopr : $!";
+        print $judp "$joinedudpdata";
+        close $judp;
+
+	my ($transport,$sourceip,$sourceport,$destip,$destport,$ipversion,$pid,$nuid,$ninode,$destfqdn);
+	
+	#Timing issues
+        my $epochref;
+        my $epochplusmsec;
+        my @filedata=split '#',$fitopr;
+        $epochplusmsec=$filedata[0];
+        my $tzone=$filedata[1];
+        $tzone =~ s/.net.gz//;
+        my $msecs=substr $epochplusmsec, -6;
+        $epochref=substr $epochplusmsec, 0, -6;
+
+	#Eventually unlink the file that was processed
+	unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink net file /home/$threadspecificpath/dev/shm/$fitopr: $!";
+
+
+}#End of fileothnet subroutine
 
 
 #Here we implement the GeoIP2 location stuff
@@ -1698,26 +1774,42 @@ sub parsefiles {
 	my $fref=shift (@myprocfiles);
 	filerefprocess($fref,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
 	 
-	#Then for the rest of the files process them differenty with the delta function inside the fileothprocess 
+	#Then Remaining netfiles to be counted
+	my $netfcounter=0;
+	my $threaddirremvindex=scalar @mynetfiles;
+
+	#For the rest of the files process them  with the delta function inside the fileothprocess 
 	foreach my $fitopr (@myprocfiles) {
 		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
 	} #end of my $fitopr (@myprocfiles)
 
 
-	#Start the process of parsing the net files
-	my $netfcounter=0;
-	my $threaddirremvindex=scalar @mynetfiles;
-	
-	
 	#Start parsing the network entries.
         #Shift the first process file of the thread This is going to be the network reference file for the delta.
 	my $nref=shift (@mynetfiles);
 	filerefnet($nref,$thnumber,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass);
 
 	foreach my $fitopr (@mynetfiles) {
-		fileothnet($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
+		fileothnet($fitopr,$thnumber,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass);
+		$netfcounter=$netfcounter+1;
 	}
 	
+	if ($netfcounter == $threaddirremvindex ) {
+        	#The very last thing we do inside the per thread  context is to cleanup the thread specific directories
+                #from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case
+                #something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
+                #as we do not like living dangerously. We start with the reference files.
+                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "parseproc.pl Warning: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp  : $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp  : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
+
+	}
+
 	#And finally we are done by removing the .pofrthread file to signal that the dir is ready for another procparse.pl process
 	#to start processing data again.
 	unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Could not unlink the .pofrthread file for user $user due to: $!";
