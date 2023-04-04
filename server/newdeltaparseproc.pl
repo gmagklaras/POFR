@@ -747,11 +747,13 @@ sub filerefnet {
                 print "filerefnet status: User $ldb: NOT THE FIRST THREAD: previous thread net table $ptablenetname and previous thread file table $ptablefilename \n";
         }
 	
+	print "filerefnet: Proceccing file $fitopr for user $user \n";
+
 	#Create the reference net file
         copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.net.gz");
 	
 	#Mow open and process the first net file
-	my $FHLNETZ = IO::File->new("<$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
 
         my $netbuffer;
         my $contents;
