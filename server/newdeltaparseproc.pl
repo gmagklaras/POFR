@@ -1150,12 +1150,13 @@ sub fileothnet {
 	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
 	my $contentsnew;
 	gunzip $FHLNETZ => \$contentsnew;
-	my ($newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
+	#Parse the different contents (sprocpid, tcp4,udp4,tcp6,udp6)
+	my ($sprocpid,$newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
         #Read the reference data
 	my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net.gz", '<:utf8');
 	my $contentsref;
 	gunzip $FHLNETZREF => \$contentsref;
-	my ($reftcpdata,$reftcpv6data,$refudpdata,$refudpv6data)=split("###", $contentsref);
+	my ($sprocpid2,$reftcpdata,$reftcpv6data,$refudpdata,$refudpv6data)=split("###", $contentsref);
 
 	#TCP V4 DELTA
 	my @newtcpdatacol=split "\n", $newtcpdata;
@@ -1210,8 +1211,327 @@ sub fileothnet {
         my $msecs=substr $epochplusmsec, -6;
         $epochref=substr $epochplusmsec, 0, -6;
 
+	#Connecting to the database
+        my $userdb="DBI:MariaDB:$ldb:$hostname";
+        my $hostservh=DBI->connect ($userdb, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
+        #Ensure that we are on the proper character set
+        $hostservh->do('SET NAMES utf8mb4');
+
+	#Beginning of TCP DATA processing
+        my $table = Linux::Proc::Net::TCP->read(mnt => $netparsedir);
+        for my $entry (@$table) {
+                $transport="tcp";
+                $sourceip=$entry->local_address;
+                $sourceport=$entry->local_port;
+                $destip=$entry->rem_address;
+                $destport=$entry->rem_port;
+                $nuid=$entry->uid;
+                $ninode=$entry->inode;
+                my $pid;
+                my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
+                my $socketstr="socket:[$ninode]";
+
+		#Are we dealing with a TCP network endpoint (not applicable to the UDP processing section  that communicates data to the POFR server?
+                #If yes, we should not consider processing it.
+		my @excludepid=split ',', $sprocpid;
+                if ( ($destip eq $serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip eq $serverip and (($destport=="22" or $sourceport=="22")))) {
+
+			#Debug
+                        #print "TCP data processing: Endpoint related to server IP $serverip and port 22, thus discarded \n";
+			} else {
+			#Is this the primary thread?
+			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid') " );
+                        $SQLh->execute();
+                        my @pidhits=$SQLh->fetchrow_array();
+
+                        my @ptablepidhits;
+                        my @ftablepidhits;
+                        #Are we the first thread?
+			if ($thnum == 1) {
+				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
+                                #@ptablepidhits. The pid hits array @pidhits gets populated from the current (first thread) file table.
+				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                                $SQLh->execute();
+                                @ptablepidhits=$SQLh->fetchrow_array();
+                                if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" ) {
+					#print "thread $thnumber (should be thread 1): TCP: pid hit NOT correlated. \n";
+					$pid="8388607"; } elsif ( scalar(@ptablepidhits) != "0" ) {
+                                        $pid=$ptablepidhits[0];
+                                        #print "thread $thnumber (should be thread 1): TCP: pid hit correlated from merged fileinfo table: $pid \n";
+					} elsif ( scalar(@pidhits) != "0") {
+                                        $pid=$pidhits[0];
+					}
+
+				} else {
+					#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
+                                        #@ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.					$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                                        $SQLh->execute();
+                                        @ptablepidhits=$SQLh->fetchrow_array();
+                                        $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                                        $SQLh->execute();
+                                        @ftablepidhits=$SQLh->fetchrow_array();
+
+					if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" && scalar(@ftablepidhits)=="0" ) {
+                                        #print "thread $thnumber: TCP: pid hit NOT correlated. \n";
+                                        $pid="8388607"; } elsif (  scalar(@ptablepidhits) != "0" ) {
+                                        $pid=$ptablepidhits[0];
+                                        #print "thread $thnumber: TCP: pid hit correlated from the previous thread fileinfo table: $pid \n";
+                                        } elsif ( scalar(@ftablepidhits) != "0") {
+					$pid=$ftablepidhits[0];
+                                        #print "thread $thnumber: TCP: pid hit correlated from thread 1 fileinfo table: $pid \n";
+                                        } elsif ( scalar(@pidhits) != "0") {
+                                        $pid=$pidhits[0];
+                                        #print "thread $thnumber: TCP: pid hit correlated from current thread table: $pid \n";
+                                        }
+
+			} #end of if ($thnumber == 1)...
+
+			if ( $sourceip =~ /\./ && $destip =~ /\./ ) { $ipversion="4"; }
+                        elsif ( $sourceip =~ /\:/ && $destip =~ /\:/) { $ipversion="6"; }
+                        else {
+                                die "newdeltaarseproc.pl Error: Inside the fileothnet function: Unknown type of IP address in file $fitopr (TCP processing section). Are we getting the right type of data? \n";
+                        }
+
+			my $digeststr1=$sourceip.$sourceport.$destip.$destport.$nuid.$ninode.$pid.$transport.$ipversion;
+                        my $shanorm=sha1_hex($digeststr1);
+                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablenetname WHERE shasum='$shanorm' AND transport='tcp' ");
+                        $SQLh->execute();
+                        my @shahits=$SQLh->fetchrow_array();
+
+			if ( $shahits[0]=="0") {
+                                if (defined $ptablenetname) {
+					#We are not the first thread here. Does the record exist in the previous thread?
+                                        my $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablenetname where shasum='$shanorm' AND transport='tcp' ");
+                                        $SQLh->execute();
+                                        my @nshahits=$SQLh->fetchrow_array();
+                                        if ($nshahits[0]=="0") {
+                                                #Record does not exist in the previous thread netinfo table, we need to SQL insert it. 
+                                                my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
+                                                #DNS resolve only when you SQL insert to avoid DNS lookup time penalties
+                                                my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
+                                                if (!$resdestip ) {
+                                                        $destfqdn="NODESTFQDN"; } else {
+                                                        $destfqdn=$resdestip;
+                                                }
+
+                                                #GeoIP2 locate 
+                                                my ($country,$city)=pofrgeoloc($destip,$ipversion);
+						$destfqdn=$hostservh->quote($destfqdn);
+                                                $country=$hostservh->quote($country);
+                                                $city=$hostservh->quote($city);
+						my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
+                                                . "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
+                                                . "'$sourceip','$sourceport','$destip','$destport',"
+                                                . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
+                                                if (($rows==-1) || (!defined($rows))) {
+                                                        print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
+                                                }} else {
+							#Record exists we do nothing
+                                               	        #print "parsenet.pl Info: TCP record exists \n";
+                                        	} #end of ifelse
+                                } #end of if (defined..
+				#Here we are part of thread number 1 so, we SQL insert the record only if it does not exist in the merged netinfo table
+                                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM netinfo WHERE shasum='$shanorm' AND transport='tcp' ");
+                                $SQLh->execute();
+				my @mergednetshahits=$SQLh->fetchrow_array();
+				if ( $mergednetshahits[0] == "0") {
+                                        my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
+                                        #DNS resolve only when you SQL insert to avoid DNS lookup time penalties
+                                        my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
+                                        if (!$resdestip ) {
+                                                $destfqdn="NODESTFQDN"; } else {
+                                                $destfqdn=$resdestip;
+                                        }
+
+                                        #GeoIP2 locate
+                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
+					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        $country=$hostservh->quote($country);
+                                        $city=$hostservh->quote($city);
+
+					my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
+                                        . "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
+                                        . "'$sourceip','$sourceport','$destip','$destport',"
+                                        . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
+                                        if (($rows==-1) || (!defined($rows))) {
+                                                print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
+                                        } #End of if(($rows==-1)
+                                } else {
+					#Record exists as part of the merged netinfo table so we do nothing.
+				} #end of if ( $mergednetshahits[0] == "0")
+			
+			} else {
+
+			#Record exists (as part of the first thread netinfo table so we do nothing.
+
+                        } #end of if( $shahits)...else
+
+		} #end of if ( ($destip==$serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip==$serverip and (($destport=="22" or $sourceport=="22")))
+	
+	} # for my $entry... END OF TCP DATA PROCESSING
+
+					
+	#Beginning of UDP data processing
+	        my $tableudp = Linux::Proc::Net::UDP->read(mnt => $netparsedir);
+                for my $entry (@$tableudp) {
+                $transport="udp";
+                $sourceip=$entry->local_address;
+                $sourceport=$entry->local_port;
+                $destip=$entry->rem_address;
+                $destport=$entry->rem_port;
+                $nuid=$entry->uid;
+                $ninode=$entry->inode;
+                my $pid;
+                my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
+                my $socketstr="socket:[$ninode]";
+
+                my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                $SQLh->execute();
+                my @pidhits=$SQLh->fetchrow_array();
+
+                my @ptablepidhits;
+                my @ftablepidhits;
+                if ($thnum == 1) {
+                        #If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
+                        #@ptablepidhits. The file table pid hits array @pidhits gets populated from the  file table.
+                        $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                        $SQLh->execute();
+                        @ptablepidhits=$SQLh->fetchrow_array();
+
+                        if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" ) {
+                                #print "thread $thnumber (should be thread 1): UDP: pid hit NOT correlated. \n";
+                                $pid="8388606"; } elsif ( scalar(@ptablepidhits) != "0" ) {
+                                $pid=$ptablepidhits[0];
+                                #print "thread $thnumber (should be thread 1): UDP: pid hit correlated from merged fileinfo table: $pid \n";
+                        } elsif ( scalar(@pidhits) != "0") {
+                                $pid=$pidhits[0];
+                                #print "thread $thnumber (should be thread 1): UDP: pid hit correlated from current thread table: $pid \n";
+                        }
+
+                } else {
+			#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
+                        # @ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
+                        $SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                        $SQLh->execute();
+                        @ptablepidhits=$SQLh->fetchrow_array();
+                        $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
+                        $SQLh->execute();
+                        @ftablepidhits=$SQLh->fetchrow_array();
+
+                        if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" && scalar(@ftablepidhits)=="0" ) {
+                                #print "thread $thnumber: UDP: pid hit NOT correlated. \n";
+                                $pid="8388606"; } elsif (  scalar(@ptablepidhits) != "0" ) {
+                                $pid=$ptablepidhits[0];
+                                #print "thread $thnumber: UDP: pid hit correlated from the previous thread fileinfo table: $pid \n";
+                                } elsif ( scalar(@ftablepidhits) != "0") {
+                                $pid=$ftablepidhits[0];
+                                #print "thread $thnumber: UDP: pid hit correlated from thread 1 fileinfo table: $pid \n";
+                                } elsif ( scalar(@pidhits) != "0") {
+                                $pid=$pidhits[0];
+                                #print "thread $thnumber: UDP: pid hit correlated from current thread table: $pid \n";
+                                }
+
+
+                } #end of if ($thnumber == 1)...
+
+                #Determining the IP version depends on the contents of the $sourceIP and $destip
+                #strings. We also check what goes in the database.
+                if ( $sourceip =~ /\./ && $destip =~ /\./ ) { $ipversion="4"; }
+                elsif ( $sourceip =~ /\:/ && $destip =~ /\:/) { $ipversion="6"; }
+                else {
+                        die "newdeltaarseproc.pl Error (inside the net loop IP determination): Unknown type of IP address in file $fitopr (UDP processing section). Are we getting the right type of data? \n"; }
+
+                my $digeststr1=$sourceip.$sourceport.$destip.$destport.$nuid.$ninode.$pid.$transport.$ipversion;
+                my $shanorm=sha1_hex($digeststr1);
+                $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablenetname WHERE shasum='$shanorm' AND transport='udp' ");
+                $SQLh->execute();
+                my @shahits=$SQLh->fetchrow_array();
+		if ( $shahits[0]=="0") {
+                        if (defined $ptablenetname) {
+                                #We are not the first thread here. Does the recorc exists in the previous thread?
+                                my $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablenetname where shasum='$shanorm' AND transport='udp' ");
+                                $SQLh->execute();
+                                my @nshahits=$SQLh->fetchrow_array();
+                                if ($nshahits[0]=="0") {
+                                        #Record does not exist in the previous thread netinfo table, we need to SQL insert it. 
+                                        my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
+                                        #DNS resolve when you SQL insert to avoid DNS lookup time penalties.
+                                        my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
+                                        if (!$resdestip ) {
+                                                $destfqdn="NODESTFQDN"; } else {
+                                                $destfqdn=$resdestip;
+                                        }
+
+                                        #GeoIP2 locate
+                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
+                                        #Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        $country=$hostservh->quote($country);
+                                        $city=$hostservh->quote($city);
+
+                                        my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
+                                        . "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
+                                        . "'$sourceip','$sourceport','$destip','$destport',"
+                                        . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
+                                        if (($rows==-1) || (!defined($rows))) {
+                                                print "newdeltaparseproc.pl Fatal Error (inside net loop UDP processing): No net record was altered. Record $entry was not registered.\n";
+                                        }
+
+                                } else {
+                                        #Record exists we do nothing
+                                }
+
+                        } #end of if (defined...
+
+                        #Here we are part of thread number 1 so, we SQL insert the record only if it does not exist in the merged netinfo thread.
+                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM netinfo WHERE shasum='$shanorm' AND transport='udp' ");
+                        $SQLh->execute();
+                        my @mergednetshahits=$SQLh->fetchrow_array();
+
+                        if ( $mergednetshahits[0] == "0") {
+                                        my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
+                                        #DNS resolve when you SQL insert to avoid DNS lookup time penalties.
+                                        my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
+                                        if (!$resdestip ) {
+                                                $destfqdn="NODESTFQDN"; } else {
+                                                $destfqdn=$resdestip;
+                                        }
+
+                                        #Quote the destfqdn in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        #GeoIP2 locate
+                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
+
+                                        #Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
+                                        $destfqdn=$hostservh->quote($destfqdn);
+                                        $country=$hostservh->quote($country);
+                                        $city=$hostservh->quote($city);
+
+
+                                        my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
+                                        . "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
+                                        . "'$sourceip','$sourceport','$destip','$destport',"
+                                        . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
+                                        if (($rows==-1) || (!defined($rows))) {
+                                                print "Parseproc.pl Fatal Error (inside the net loop UDP section): No process record was altered. Record $entry was not registered.\n";
+                                        } #end of if (($rows==-1) 
+
+                                } else {
+                                        #Record exists as part of the merged netinfo table so we do nothing.
+                                } #end of if ( $mergednetshahits[0] == "0") ... else
+
+
+                         } else {
+                        #Record exists as part of the current netinfo table of thread 1 so we do nothing.
+
+                         }#end of if ( $shahits[0]=="0") else....(UDP Section)  
+
+        } #End of UDP data processing for my for my $entry (@$tableudp) 
+
 	#Eventually unlink the file that was processed
-	unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink net file /home/$threadspecificpath/dev/shm/$fitopr: $!";
+	unlink "$threadspecificpath/dev/shm/$fitopr" or warn "newdeltaparseproc.pl Warning: Inside fileothnet: Could not unlink net file /home/$threadspecificpath/dev/shm/$fitopr: $!";
+	$hostservh->disconnect;
 
 
 }#End of fileothnet subroutine
