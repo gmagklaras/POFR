@@ -1253,7 +1253,7 @@ sub parsefiles {
 		print "Thread no. 11, on $user sleeping for 250 secs. \n";
 		usleep(250000000); } elsif ($thnumber==10) {
 		print "Thread no. 10, on $user sleeping for 225 secs. \n";
-		usleep(22500000); } elsif ($thnumber==9) {
+		usleep(225000000); } elsif ($thnumber==9) {
 		print "Thread no. 9, on $user sleeping for 200 secs. \n";
 		usleep(200000000); } elsif ($thnumber==8) {
 		print "Thread no. 8, on $user sleeping for 175 secs. \n";
