@@ -159,17 +159,18 @@ sub filerefprocess {
 	my $ptableprocname=shift;
 	my $ptablefilename=shift;
 	my $ldb=shift;
+	my $user=shift;
 	my $hostname=shift;
 	my $dbusername=shift; 
 	my $dbpass=shift;
 
 	#Debug
 	if ($thnum=="1") {
-		print "filerefprocess status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+		print "filerefprocess status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
 		print "filerefprocess status: NOT DEFINED ptableprocname and ptablefilename as this is the FIRST THREAD \n";
 	} else {
-		print "filerefprocess status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
-		print "filerefprocess status: User $ldb: NOT THE FIRST THREAD: previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
+		print "filerefprocess status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+		print "filerefprocess status: User $user: NOT THE FIRST THREAD: previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
 	}
 
 	my $tzone;
@@ -430,20 +431,21 @@ sub fileothprocess {
         my $ptableprocname=shift;
         my $ptablefilename=shift;
         my $ldb=shift;
+	my $user=shift;
         my $hostname=shift;
         my $dbusername=shift;
         my $dbpass=shift;
 
 	#Debug
-	print "calling fileothprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+	print "calling fileothprocess for user $user from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
 	print "previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
 	
 
 	#Sanity check, do we we have the reference file?
 	if ( (-e "$threadspecificpath/dev/shm/referencefile.proc.gz")) {
-		print "fileothprocess: Found my reference file on thread number $thnum and path $threadspecificpath. \n";
+		print "fileothprocess: User $user Found my reference file on thread number $thnum and path $threadspecificpath. \n";
 	} else {
-		die "fileothprocess: Error: Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
+		die "fileothprocess: Error: USer $user Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
 	}
 
 	#Here we produce the Delta
@@ -740,7 +742,7 @@ sub filerefnet {
         my $dbpass=shift;
 	#Debug
         if ($thnum=="1") {
-                print "filerefnet status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: User $user: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
                 print "filerefnet status: NOT DEFINED ptablenetname and ptablefilename as this is the FIRST THREAD \n";
         } else {
                 print "filerefnet status: User $user: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
@@ -1772,15 +1774,16 @@ sub parsefiles {
 	#Start the process parsing entries
 	#Shift the first process file of the thread This is going to be the process reference file for the delta.
 	my $fref=shift (@myprocfiles);
-	filerefprocess($fref,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
+	filerefprocess($fref,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$user,$hostname,$dbusername,$dbpass);
 	 
-	#Then Remaining netfiles to be counted
-	my $netfcounter=0;
+	#Then remaining netfiles to be counted (that's why we start counting from 1 not 0)
+	my $netfcounter=1;
 	my $threaddirremvindex=scalar @mynetfiles;
+	print "Inside parsefiles: Thread $thnumber: The threaddirremvindex size is: $threaddirremvindex \n";
 
 	#For the rest of the files process them  with the delta function inside the fileothprocess 
 	foreach my $fitopr (@myprocfiles) {
-		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
+		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$user,$hostname,$dbusername,$dbpass);
 	} #end of my $fitopr (@myprocfiles)
 
 
@@ -1792,6 +1795,7 @@ sub parsefiles {
 	foreach my $fitopr (@mynetfiles) {
 		fileothnet($fitopr,$thnumber,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass);
 		$netfcounter=$netfcounter+1;
+		print "Inside parsefiles: Thread $thnumber: Inside the mynetfiles loop netfcounter is $netfcounter while threaddirremvindex is $threaddirremvindex \n";
 	}
 	
 	if ($netfcounter == $threaddirremvindex ) {
@@ -1799,7 +1803,8 @@ sub parsefiles {
                 #from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case
                 #something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
                 #as we do not like living dangerously. We start with the reference files.
-                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "parseproc.pl Warning: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
+                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
+		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.net.gz in the the thread specific directory $threadspecificpath: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
