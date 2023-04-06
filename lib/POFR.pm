@@ -1036,7 +1036,8 @@ sub determinepreviousthread {
 } #End of determinepreviousthread
 
 sub processnetfile {
-	#This processes the data from a network file
+	#This subroutine processes the data from a network file.
+	#It is called either by the filerefnet or by the fileothnet subroutine.
 	my $fitopr=shift;
 	my $thnum=shift;
 	my $threadspecificpath=shift;
@@ -1052,6 +1053,12 @@ sub processnetfile {
         my $hostname=shift;
         my $dbusername=shift;
         my $dbpass=shift;
+	#We also need to pass both the sprocpid from the reference and new net files.
+	#The filerefnet subroutine will set the $sprocpid2 as 'EMPTY'.
+	my $sprocpid=shift;
+	my $sprocpid2=shift;
+
+	my $serverip=shift;
 
 	my ($transport,$sourceip,$sourceport,$destip,$destport,$ipversion,$pid,$nuid,$ninode,$destfqdn);
 
