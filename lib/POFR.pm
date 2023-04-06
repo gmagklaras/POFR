@@ -29,6 +29,17 @@ package POFR;
 use strict;
 use warnings;
 use Exporter;
+use Digest::SHA qw(sha1 sha1_hex sha256_hex);
+use Linux::Proc::Net::TCP;
+use Linux::Proc::Net::UDP;
+use Net::Nslookup;
+use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
+use IO::File;
+use List::MoreUtils qw( part );
+use List::AssignRef;
+use File::Copy;
+use IO::Compress::Gzip;
+use Geo::IP2Location;
 
 our @ISA= qw( Exporter );
 
