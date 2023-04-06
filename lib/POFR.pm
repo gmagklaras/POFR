@@ -1062,7 +1062,7 @@ sub processnetfile {
 
 	my ($transport,$sourceip,$sourceport,$destip,$destport,$ipversion,$pid,$nuid,$ninode,$destfqdn);
 
-	print "Inside processnetfile: Beginning processing of file $fitopr as part of thread $$thnum for user $user \n";
+	print "Inside processnetfile: Beginning processing of file $fitopr as part of thread $thnum for user $user \n";
 	#Timing issues
         my $epochref;
         my $epochplusmsec;
