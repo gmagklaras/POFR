@@ -44,7 +44,7 @@ use Geo::IP2Location;
 our @ISA= qw( Exporter );
 
 #Control what we export by default
-our @EXPORT = qw( getdbauth dbtimestamp timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename processnetfile);
+our @EXPORT = qw( getdbauth dbtimestamp timestamp table_exists find_data_time_range check_requested_data_time_range date_is_later_than date_is_earlier_than get_requested_data_from_time_range determinepreviousthread sanitize_filename pofrgeoloc processnetfile);
 
 
 #Subroutine definitions here
@@ -1045,6 +1045,53 @@ sub determinepreviousthread {
         return ($previousfts,$previouslts,$threadnum,$firstthreadfts,$firstthreadlts);
 
 } #End of determinepreviousthread
+
+#Here we implement the GeoIP2 location stuff
+sub pofrgeoloc {
+        my $iptogeolocate=shift;
+        my $versionofip=shift;
+
+        if ( $versionofip=="4" ) {
+                eval {
+
+                        my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.BIN");
+
+                        if (!defined($obj)) {
+                                print STDERR Geo::IP2Location::get_last_error_message();
+                        }
+
+                        my $country=$obj->get_country_short($iptogeolocate);
+                        my $city=$obj->get_city($iptogeolocate);
+
+                        return $country,$city;
+
+                } #End of eval for IPv4
+
+        } elsif ( $versionofip=="6" ) {
+                eval {
+                        my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.IPV6.BIN");
+
+                        if (!defined($obj)) {
+                                print STDERR Geo::IP2Location::get_last_error_message();
+                        }
+
+                        my $country=$obj->get_country_short($iptogeolocate);
+                        my $city=$obj->get_city($iptogeolocate);
+
+                        return $country,$city;
+
+                } #End of eval for IPv6
+
+        } else {
+                my $country="INVALIDDATADUETOIPVERSION";
+                my $city = "INVALIDDATADUETOIPVERSION";
+
+                return $country,$city;
+
+        } #End of if ( $versionofip=="4" ) ... else
+
+
+} #end of pofrgeoloc
 
 sub processnetfile {
 	#This subroutine processes the data from a network file.
