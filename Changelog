@@ -1,4 +1,17 @@
-v1.2.2 named "Mary Jackson" (Mat 17, 2023):
+v1.2.3 named "Mary Jackson" (Apr 8, 2023):
+This is a bug fix release:
+-Bug fixes:
+  - newdeltaparseproc.pl: Bug fix/enhancement:  If the server IP is not DNS resolvable, get it via Sys::Hostname. 
+    Backpopted from the makenetworkdelta branch.
+  - newdeltaparseproc.pl: Fix the thread timing with thread number 10. It is supposed to sleep for 225 seconds, instead it was sleeping for 22.5 seconds, 
+    so it was firing up early. This could skew data processing.
+  - pofrclientderegister.pl: Corrected regular expression to ensure we do not delete the pofr client utilities when we remove a system.
+-Impovements/upgrades/compatibility issues:
+  - Updated the IP2LOCATION LITE DB to the April 2023 release.
+
+Due to the severity of the bugs, all users are advised to switch immediately to release v1.2.3.
+
+v1.2.2 named "Mary Jackson" (Mar 17, 2023):
 This is a bug fix and enhancement release:
 -Bug fixes:
   -  newdeltaparseproc.pl: Corrected runtime errors from unmodified statements as a result of the modifications to include both real and effective uid/gids.
@@ -30,7 +43,7 @@ This is a bug fix release:
     -Re-ordering the data into "ORDER BY" SQL statements to avoid a bug where the psinfo/fileinfo/netinfo tables contain data that spans multiple days (say two consecutive days), so the "ORDER BY chour,cmin,csec,cmsec" will place the data of the latter day first. Consequently, these SQL ORDER BY statements should instead read "ORDER BY cyear,cmonth,cday,chour,cmin,csec,cmsec" and 
     "ORDER BY cyear DESC,cmonth DESC,cday DESC,chour DESC,cmin DESC,csec DESC,cmsec DESC" to find the latest data instead.
 
-Due to the severity of this bug that affects idle/less loaded systems, all users are advised to switch immediately to release v1.2.1
+Due to the severity of this bug that affects idle/less loaded systems, all users are advised to switch immediately to release v1.2.1.
 
 v1.2.0 named "Hedy Lamarr" (Oct 1 2022):
 - Bug fixes:
