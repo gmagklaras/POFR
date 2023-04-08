@@ -54,6 +54,9 @@ use List::AssignRef;
 use File::Copy;
 use IO::Compress::Gzip;
 use Geo::IP2Location;
+use Sys::Hostname;
+use Socket;
+
 
 #Sanity checks
 
@@ -75,6 +78,14 @@ if (-e "/dev/shm/pofrserver" && -d "/dev/shm/pofrserver") {
 #and wasting space.
 my $serverhostname=hostname;
 my $serverip=nslookup(host => "$serverhostname", type => "A", timeout => "1");
+
+if (! (defined $serverip)) {
+        print "newdeltaparseproc.pl Error: Could not resolve the POFR server IP, so I will use Sys::Hostname to obtain it. \n";
+        $serverip=inet_ntoa((gethostbyname(hostname))[4]);
+}
+
+print "newdeltaparseproc.pl: Detected IP address from primary interface is $serverip \n";
+
  
 #Get the number of server cores to make to parallelize the whole thing a bit
 my $corecount=`cat /proc/cpuinfo | grep ^processor | wc -l`;
