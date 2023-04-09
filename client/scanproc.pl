@@ -36,6 +36,7 @@ use IO::File;
 use Time::HiRes qw(usleep clock_gettime gettimeofday clock_getres CLOCK_REALTIME ITIMER_REAL ITIMER_VIRTUAL ITIMER_PROF ITIMER_REALPROF);
 use POSIX;
 use IO::Compress::Gzip;
+use POFR;
 
 my $sprocpid="$$";
 #Sampling delay - Increased for development mode. Original value 300000.
@@ -171,7 +172,10 @@ while (1==1) {
 	 	close(FDD);
 	 	my @openfiles;
 	 	foreach my $fd (@fds) {
+			#Sanitize the filename to ensure we do not have unwanted characters
+			$fd=sanitize_filename($fd);
 			push(@openfiles,readlink"/proc/$proc/fd/$fd");
+
 		} #end of foreach my $fd
     
     		if ($#openfiles=='-1') {
