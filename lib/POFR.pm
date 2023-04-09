@@ -143,6 +143,9 @@ sub sanitize_filename {
         #Remove a '#' character from the string. That could
         #really break our data encoding techniques
         $fnstring =~ s/#//g;
+	#Replace white space with triple underscore to avoid the bug of 
+	#braking up the filename into multiple entries in the RDBMS.
+	$fnstring =~ s/\s/___/g;
         #Also check if the string is greater than 4k characters which is the limit
         #of the maximum file path in the database.
         my $sanitizedfname=substr $fnstring,0,4095;
