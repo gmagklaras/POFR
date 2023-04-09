@@ -128,8 +128,10 @@ close $P;
 	 	my @openfiles;
 	 	foreach my $fd (@fds) {
 			#Sanitize the filename to ensure we do not have unwanted characters
-			$fd=sanitize_filename($fd);
-			push(@openfiles,readlink"/proc/$proc/fd/$fd");
+			my $sfn=readlink"/proc/$proc/fd/$fd";
+			$sfn=sanitize_filename($sfn);
+			push(@openfiles,$sfn);
+
 		} #end of foreach my $fd
     
     		if ($#openfiles=='-1') {
