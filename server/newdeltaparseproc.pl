@@ -83,9 +83,6 @@ if (! (defined $serverip)) {
   $serverip=inet_ntoa((gethostbyname(hostname))[4]);
 }
 
-
-}
-
 print "newdeltaparseproc.pl: Detected IP address from primary interface is $serverip \n";
 
  
