@@ -57,7 +57,6 @@ use Geo::IP2Location;
 use Sys::Hostname;
 use Socket;
 
-
 #Sanity checks
 
 my @whoami=getpwuid($<);
@@ -68,8 +67,8 @@ if ($whoami[2]!=0 && $whoami[3]!=0);
 #Does the POFR server directory exists under /dev/shm/luamserver
 #(necessary for the net files processing) 
 if (-e "/dev/shm/pofrserver" && -d "/dev/shm/pofrserver") {
-        print "parseproc.pl: Detected /dev/shm/pofrserver dir...Starting up! \n";} else {
-        print "parseproc.pl Error: Could not detect /dev/shm/pofrserver/net dir...Fresh boot? Creating it... \n";
+        print "newdeltaparseproc.pl: Detected /dev/shm/pofrserver dir...Starting up! \n";} else {
+        print "newdeltaparseproc.pl Error: Could not detect /dev/shm/pofrserver/net dir...Fresh boot? Creating it... \n";
         mkdir "/dev/shm/pofrserver";
 
 }
@@ -80,8 +79,8 @@ my $serverhostname=hostname;
 my $serverip=nslookup(host => "$serverhostname", type => "A", timeout => "1");
 
 if (! (defined $serverip)) {
-        print "newdeltaparseproc.pl Error: Could not resolve the POFR server IP, so I will use Sys::Hostname to obtain it. \n";
-        $serverip=inet_ntoa((gethostbyname(hostname))[4]);
+  print "newdeltaparseproc.pl Error: Could not resolve the POFR server IP, so I will use Sys::Hostname to obtain it. \n";
+  $serverip=inet_ntoa((gethostbyname(hostname))[4]);
 }
 
 print "newdeltaparseproc.pl: Detected IP address from primary interface is $serverip \n";
@@ -170,17 +169,18 @@ sub filerefprocess {
 	my $ptableprocname=shift;
 	my $ptablefilename=shift;
 	my $ldb=shift;
+	my $user=shift;
 	my $hostname=shift;
 	my $dbusername=shift; 
 	my $dbpass=shift;
 
 	#Debug
 	if ($thnum=="1") {
-		print "filerefprocess status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+		print "filerefprocess status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
 		print "filerefprocess status: NOT DEFINED ptableprocname and ptablefilename as this is the FIRST THREAD \n";
 	} else {
-		print "filerefprocess status: User $ldb: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
-		print "filerefprocess status: User $ldb: NOT THE FIRST THREAD: previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
+		print "filerefprocess status: User $user: calling filerefprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+		print "filerefprocess status: User $user: NOT THE FIRST THREAD: previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
 	}
 
 	my $tzone;
@@ -441,20 +441,21 @@ sub fileothprocess {
         my $ptableprocname=shift;
         my $ptablefilename=shift;
         my $ldb=shift;
+	my $user=shift;
         my $hostname=shift;
         my $dbusername=shift;
         my $dbpass=shift;
 
 	#Debug
-	print "calling fileothprocess from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
+	print "calling fileothprocess for user $user from thread $thnum with first file $fitopr current thread process table $tableprocname current thread file table $tablefilename \n";
 	print "previous thread process table $ptableprocname and previous thread file table $ptablefilename \n";
 	
 
 	#Sanity check, do we we have the reference file?
 	if ( (-e "$threadspecificpath/dev/shm/referencefile.proc.gz")) {
-		print "fileothprocess: Found my reference file on thread number $thnum and path $threadspecificpath. \n";
+		print "fileothprocess: User $user Found my reference file on thread number $thnum and path $threadspecificpath. \n";
 	} else {
-		die "fileothprocess: Error: Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
+		die "fileothprocess: Error: USer $user Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
 	}
 
 	#Here we produce the Delta
@@ -730,53 +731,165 @@ sub fileothprocess {
       } #End of if ($remainingprocs == "1") { 
 
 } #end of fileothprocess
- 
-#Here we implement the GeoIP2 location stuff
-sub pofrgeoloc {
-	my $iptogeolocate=shift;
-	my $versionofip=shift;
 
-	if ( $versionofip=="4" ) {
-		eval {
-
-        		my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.BIN");
-
-        		if (!defined($obj)) {
-                		print STDERR Geo::IP2Location::get_last_error_message();
-        		}
-
-			my $country=$obj->get_country_short($iptogeolocate);
-			my $city=$obj->get_city($iptogeolocate);
-
-			return $country,$city;
-
-		} #End of eval for IPv4
-
-	} elsif ( $versionofip=="6" ) {
-		eval {
-			my $obj = Geo::IP2Location->open("../extensions/IP2LOCATION-LITE-DB3.IPV6.BIN");
-
-			if (!defined($obj)) {
-                                print STDERR Geo::IP2Location::get_last_error_message();
-                        }
-
-			my $country=$obj->get_country_short($iptogeolocate);
-                        my $city=$obj->get_city($iptogeolocate);
-			
-			return $country,$city;
-
-		} #End of eval for IPv6
-
-	} else {
-	       	my $country="INVALIDDATADUETOIPVERSION";
-		my $city = "INVALIDDATADUETOIPVERSION";
+#Were we implement the reference files for the network data
+sub filerefnet {
+	#Processes the first net file of a thread and produces the reference net file
+        my $fitopr=shift;
+        my $thnum=shift;
+        my $threadspecificpath=shift;
+        my $tablenetname=shift;
+        my $tablefilename=shift;
+	my $ftablefilename=shift;
+        my $ptablenetname=shift;
+        my $ptablefilename=shift;
+	my $pseudoprocdir=shift;
+        my $ldb=shift;
+	my $user=shift;
+	my $netparsedir=shift;
+        my $hostname=shift;
+        my $dbusername=shift;
+        my $dbpass=shift;
+	#Debug
+        if ($thnum=="1") {
+                print "filerefnet status: User $user: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: NOT DEFINED ptablenetname and ptablefilename as this is the FIRST THREAD \n";
+        } else {
+                print "filerefnet status: User $user: calling filerefnet from thread $thnum with first file $fitopr current thread net table $tablenetname current thread file table $tablefilename \n";
+                print "filerefnet status: User $user: NOT THE FIRST THREAD: previous thread net table $ptablenetname and previous thread file table $ptablefilename \n";
+        }
 	
-		return $country,$city;
+	print "filerefnet: User $user, thread $thnum: Processing file $fitopr for user $user \n";
 
-	} #End of if ( $versionofip=="4" ) ... else
-		       
+	#Create the reference net file
+        copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.net.gz");
+	
+	#Mow open and process the first net file
+	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
 
-} #end of pofrgeoloc
+        my $netbuffer;
+        my $contents;
+        gunzip $FHLNETZ => \$contents;
+
+ 	#Parse the different contents (tcp4,udp4,tcp6,udp6)
+	my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
+	#Remove the header line that is unparseable
+        $tcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+        $udpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
+        $tcpv6data =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+        $udpv6data =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
+
+	my $joinedtcpdata="$tcpdata $tcpv6data";
+        my $joinedudpdata="$udpdata $udpv6data";
+
+	#Produce the pseudoprocdir files
+	open my $jtcp, ">", "$pseudoprocdir/tcp" or die "parseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
+        print $jtcp "$joinedtcpdata";
+        close $jtcp;
+        open my $judp, ">", "$pseudoprocdir/udp" or die "parseproc.pl Error: Cannot create pseudoproc file for udpdata. User $user processing client file $fitopr : $!";
+        print $judp "$joinedudpdata";
+        close $judp;
+	
+	#Debug
+	print "newdeltaparseproc: Inside filerefnet, thread $thnum on user $user: about to call processnetfile. \n"; 
+	#Process the network data
+	processnetfile($fitopr,$thnum,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass,$sprocpid,"EMPTY",$serverip);
+
+	print "newdeltaparseproc: Inside filerefnet, thread $thnum on user $user: Done with file $fitopr \n";
+
+} #end of filerefnet subroutine
+
+sub fileothnet {
+	#This will produce the delta net file by looking at the deltas of the 
+	#tcp v4 2. udp v4 3. tcp v6 4. udpv6 .
+	my $fitopr=shift;
+        my $thnum=shift;
+        my $threadspecificpath=shift;
+        my $tablenetname=shift;
+        my $tablefilename=shift;
+        my $ftablefilename=shift;
+        my $ptablenetname=shift;
+        my $ptablefilename=shift;
+        my $pseudoprocdir=shift;
+        my $ldb=shift;
+        my $user=shift;
+        my $netparsedir=shift;
+        my $hostname=shift;
+        my $dbusername=shift;
+        my $dbpass=shift;
+
+	#Sanity check, do we we have the reference file?
+        if ( (-e "$threadspecificpath/dev/shm/referencefile.net.gz")) {
+      		print "fileothnet: Found my reference file on thread number $thnum and path $threadspecificpath. \n";
+        } else {
+                die "fileothnet: Error: Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
+        }
+
+	#Here we produce the network delta
+	print "fileothnet: Operating on file $fitopr on $user, thread number $thnum  \n";
+	#Read the latest data
+	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+	my $contentsnew;
+	gunzip $FHLNETZ => \$contentsnew;
+	#Parse the different contents (sprocpid, tcp4,udp4,tcp6,udp6)
+	my ($sprocpid,$newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
+        #Read the reference data
+	my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net.gz", '<:utf8');
+	my $contentsref;
+	gunzip $FHLNETZREF => \$contentsref;
+	my ($sprocpid2,$reftcpdata,$reftcpv6data,$refudpdata,$refudpv6data)=split("###", $contentsref);
+
+	#TCP V4 DELTA
+	my @newtcpdatacol=split "\n", $newtcpdata;
+	my @reftcpdatacol=split "\n", $reftcpdata;
+	my @deltatcpdata=array_minus(@newtcpdatacol,@reftcpdatacol);
+
+	#TCP V6 DELTA
+	my @newtcpv6datacol=split "\n", $newtcpv6data;
+	my @reftcpv6datacol=split "\n", $reftcpv6data;
+	my @deltatcpv6data=array_minus(@newtcpv6datacol,@reftcpv6datacol);
+
+	#UDP V4 DELTA
+	my @newudpdatacol=split "\n", $newudpdata;
+	my @refudpdatacol=split "\n", $refudpdata;
+	my @deltaudpdata=array_minus(@newudpdatacol,@refudpdatacol);
+
+	#UDP V6 DELTA
+	my @newudpv6datacol=split "\n", $newudpv6data;
+	my @refudpv6datacol=split "\n", $refudpv6data;
+	my @deltaudpv6data=array_minus(@newudpv6datacol,@refudpv6datacol);
+
+	#And from now we work only with the deltas
+	#and create the psuedoproc files for the module to pass
+	my $deltatcpjoin=join("", @deltatcpdata);
+	my $deltatcpv6join=join("", @deltatcpv6data);
+	my $joinedtcpdata="$deltatcpjoin $deltatcpv6join";
+	
+	my $deltaudpjoin=join("", @deltaudpdata);
+	my $deltaudpv6join=join("", @deltaudpv6data);
+	my $joinedudpdata="$deltaudpjoin $deltaudpv6join";
+
+	#Debug
+	print "fileothnet: joinedtcpdata: @deltatcpdata \n @deltatcpv6data \n";
+	print "fileothnet: joinedudpdata: @deltaudpdata \n @deltaudpv6data \n";
+
+	open my $jtcp, ">", "$pseudoprocdir/tcp" or die "newdeltaparseproc.pl Error: Inside fileothnet: User $user, thread $thnum: Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
+        print $jtcp "$joinedtcpdata";
+        close $jtcp;
+        open my $judp, ">", "$pseudoprocdir/udp" or die "newdeltaparseproc.pl Error:Inside fileothnet: User $user, thread $thnum: Cannot create pseudoproc file for udpdata. User $user processing client file $fitopr : $!";
+        print $judp "$joinedudpdata";
+        close $judp;
+
+	#Debug
+        print "newdeltaparseproc: Inside fileothnet, thread $thnum on user $user: about to call processnetfile. \n";
+
+	#Process the network data
+        processnetfile($fitopr,$thnum,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass,$sprocpid,$sprocpid2,$serverip);
+
+	print "newdeltaparseproc: Inside fileothnet, thread $thnum on user $user: Done with file $fitopr \n";
+
+}#End of fileothnet subroutine
+
 
 sub procuser {
 	my $user= shift;
@@ -1286,441 +1399,52 @@ sub parsefiles {
 	
 	print "Thread number $thnumber on $user is resuming from sleeping. \n";
 	#Start the process parsing entries
-	#Shift the first file of the thread This is going to be the reference file for the delta.
+	#Shift the first process file of the thread This is going to be the process reference file for the delta.
 	my $fref=shift (@myprocfiles);
-	filerefprocess($fref,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
+	filerefprocess($fref,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$user,$hostname,$dbusername,$dbpass);
 	 
-	#Then for the rest of the files process them differenty with the delta function inside the fileothprocess 
+	#Then remaining netfiles to be counted (that's why we start counting from 1 not 0)
+	my $netfcounter=1;
+	my $threaddirremvindex=scalar @mynetfiles;
+	print "Inside parsefiles: Thread $thnumber: The threaddirremvindex size is: $threaddirremvindex \n";
+
+	#For the rest of the files process them  with the delta function inside the fileothprocess 
 	foreach my $fitopr (@myprocfiles) {
-		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$hostname,$dbusername,$dbpass);
+		fileothprocess($fitopr,$thnumber,$threadspecificpath,$tableprocname,$tablefilename,$ptableprocname,$ptablefilename,$ldb,$user,$hostname,$dbusername,$dbpass);
 	} #end of my $fitopr (@myprocfiles)
 
 
-	#Start the process of parsing the net files
-	my $netfcounter=0;
-	my $threaddirremvindex=scalar @mynetfiles;
-	
-	# New connection to the right host db before refactoring the processing of the network data
-	$userdb="DBI:MariaDB:$ldb:$hostname";
-	$hostservh=DBI->connect ($userdb, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
-	#Ensure that we are on the proper character set
-	$hostservh->do('SET NAMES utf8mb4');
+	#Start parsing the network entries.
+        #Shift the first process file of the thread This is going to be the network reference file for the delta.
+	my $nref=shift (@mynetfiles);
+	filerefnet($nref,$thnumber,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass);
 
 	foreach my $fitopr (@mynetfiles) {
-		my $FHLNETZ = new IO::File "<$threadspecificpath/dev/shm/$fitopr";
-                my $netbuffer;
-		my $contents;
-                #open(FHL, "<", "/home/$user/$fitopr");
-                #Debug
-                #print "FILE: $fitopr \n";
-		gunzip $FHLNETZ => \$contents;
-                #my @lines=split "\n", $netbuffer;
-		#Should we not go directly into $contents?
-                #my $contents = join("", @lines);
-		#print "Contents are: $contents \n";
-                my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
-		#Remove the header line that is unparseable
-		$tcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		$udpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		$tcpv6data =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-		$udpv6data =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-
-		my $joinedtcpdata="$tcpdata $tcpv6data";
-                my $joinedudpdata="$udpdata $udpv6data";
-
-		#Remove the header line that is unparseable
-		#$joinedtcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		#$joinedudpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		#$joinedtcpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		#$joinedudpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode//ig;
-		#$joinedtcpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-		#$joinedudpdata =~ s/sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-		#$joinedtcpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-		#$joinedudpdata =~ s/sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops//ig;
-                
-		open my $jtcp, ">", "$pseudoprocdir/tcp" or die "parseproc.pl Error:Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
-                print $jtcp "$joinedtcpdata";
-                close $jtcp;
-                open my $judp, ">", "$pseudoprocdir/udp" or die "parseproc.pl Error: Cannot create pseudoproc file for udpdata. User $user processing client file $fitopr : $!";
-		print $judp "$joinedudpdata";
-                close $judp;
-
-                my ($transport,$sourceip,$sourceport,$destip,$destport,$ipversion,$pid,$nuid,$ninode,$destfqdn);
-		
-		#Timing issues
-                my $epochref;
-                my $epochplusmsec;
-                my @filedata=split '#',$fitopr;
-                $epochplusmsec=$filedata[0];
-                my $tzone=$filedata[1];
-                $tzone =~ s/.net.gz//;
-                my $msecs=substr $epochplusmsec, -6;
-                $epochref=substr $epochplusmsec, 0, -6;
-		
-		#Beginning of TCP DATA processing
-		my $table = Linux::Proc::Net::TCP->read(mnt => $netparsedir);
-                for my $entry (@$table) {
-			$transport="tcp";
-                        $sourceip=$entry->local_address;
-                        $sourceport=$entry->local_port;
-                        $destip=$entry->rem_address;
-                        $destport=$entry->rem_port;
-                        $nuid=$entry->uid;
-                        $ninode=$entry->inode;
-			my $pid;
-                        my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
-                        my $socketstr="socket:[$ninode]";
-			
-			#Are we dealing with a TCP network endpoint (not applicable to the UDP processing section  that communicates data to the POFR server? 
-			#If yes, we should not consider processing it.
-			my @excludepid=split ',', $sprocpid;
-			if ( ($destip eq $serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip eq $serverip and (($destport=="22" or $sourceport=="22")))) {
-					#Debug
-					#print "TCP data processing: Endpoint related to server IP $serverip and port 22, thus discarded \n";
-			} else {
-
-			#my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND uid='$nuid' AND cday='$pidsday' AND chour='$pidshour' AND cmin='$pidsmin' " );
-		        #Is this the primary thread?
-		        #...
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid') " );
-                        $SQLh->execute();
-                        my @pidhits=$SQLh->fetchrow_array();
-			
-			my @ptablepidhits;
-			my @ftablepidhits;
-	
-			#Are we the first thread?
-			if ($thnumber == 1) {
-				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
-				#@ptablepidhits. The pid hits array @pidhits gets populated from the current (first thread) file table.
-				$SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-				$SQLh->execute();
-				@ptablepidhits=$SQLh->fetchrow_array();
-				
-				if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" ) {
-					#print "thread $thnumber (should be thread 1): TCP: pid hit NOT correlated. \n";
-					$pid="8388607"; } elsif ( scalar(@ptablepidhits) != "0" ) {
-					$pid=$ptablepidhits[0];
-					#print "thread $thnumber (should be thread 1): TCP: pid hit correlated from merged fileinfo table: $pid \n";
-					} elsif ( scalar(@pidhits) != "0") {
-					$pid=$pidhits[0];
-					#print "thread $thnumber (should be thread 1): TCP: pid hit correlated from current thread table: $pid \n";
-					}
-				
-			} else {
-				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
-				#@ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                                $SQLh->execute();
-                                @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                                $SQLh->execute();
-                                @ftablepidhits=$SQLh->fetchrow_array();
-
-
-
-				if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" && scalar(@ftablepidhits)=="0" ) {
-					#print "thread $thnumber: TCP: pid hit NOT correlated. \n";
-					$pid="8388607"; } elsif (  scalar(@ptablepidhits) != "0" ) {
-				$pid=$ptablepidhits[0];
-				#print "thread $thnumber: TCP: pid hit correlated from the previous thread fileinfo table: $pid \n";
-				} elsif ( scalar(@ftablepidhits) != "0") {
-				$pid=$ftablepidhits[0];
-				#print "thread $thnumber: TCP: pid hit correlated from thread 1 fileinfo table: $pid \n";
-				} elsif ( scalar(@pidhits) != "0") {
-				$pid=$pidhits[0];
-                                #print "thread $thnumber: TCP: pid hit correlated from current thread table: $pid \n";
-                                } 
-
-				
-                        } #end of if ($thnumber == 1)...
-			
-			if ( $sourceip =~ /\./ && $destip =~ /\./ ) { $ipversion="4"; }
-                        elsif ( $sourceip =~ /\:/ && $destip =~ /\:/) { $ipversion="6"; }
-                        else {
-                                die "Parseproc.pl Error: Unknown type of IP address in file $fitopr (TCP processing section). Are we getting the right type of data? \n";
-                        }
-
-                        my $digeststr1=$sourceip.$sourceport.$destip.$destport.$nuid.$ninode.$pid.$transport.$ipversion;
-                        my $shanorm=sha1_hex($digeststr1);
-			$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablenetname WHERE shasum='$shanorm' AND transport='tcp' ");
-                        $SQLh->execute();
-                        my @shahits=$SQLh->fetchrow_array();
-			
-                        if ( $shahits[0]=="0") {
-				if (defined $ptablenetname) {
-					#We are not the first thread here. Does the record exist in the previous thread?
-					my $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablenetname where shasum='$shanorm' AND transport='tcp' ");
-					$SQLh->execute();
-					my @nshahits=$SQLh->fetchrow_array();
-					if ($nshahits[0]=="0") {
-						#Record does not exist in the previous thread netinfo table, we need to SQL insert it. 
-						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-						#DNS resolve only when you SQL insert to avoid DNS lookup time penalties
-						my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
-                        			if (!$resdestip ) {
-                                			$destfqdn="NODESTFQDN"; } else {
-                                			$destfqdn=$resdestip;
-                        			}
-
-						#GeoIP2 locate 
-						my ($country,$city)=pofrgeoloc($destip,$ipversion);
-
-						#Debug
-						#print "cyear is $cyear csec is $csec cmsec is $msecs and uid is $nuid, fetched pid:$pid and destFQDN:$destfqdn \n";
-						#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
-						$destfqdn=$hostservh->quote($destfqdn);
-						$country=$hostservh->quote($country);
-						$city=$hostservh->quote($city);
-						my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
-                                   		. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
-                                   		. "'$sourceip','$sourceport','$destip','$destport',"
-                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
-                                		if (($rows==-1) || (!defined($rows))) {
-                                        		print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
-                                        	}} else {
-						#Record exists we do nothing
-					        #print "parsenet.pl Info: TCP record exists \n";
-					} #end of ifelse
-
-				} #end of if (defined...
-				#Here we are part of thread number 1 so, we SQL insert the record only if it does not exist in the merged netinfo table
-				$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM netinfo WHERE shasum='$shanorm' AND transport='tcp' ");
-				$SQLh->execute();
-				my @mergednetshahits=$SQLh->fetchrow_array();
-				
-				if ( $mergednetshahits[0] == "0") {
-					my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-					#DNS resolve only when you SQL insert to avoid DNS lookup time penalties
-					my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
-					if (!$resdestip ) {
-                                        	$destfqdn="NODESTFQDN"; } else {
-                                        	$destfqdn=$resdestip;
-                                        }
-
-					#GeoIP2 locate
-                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
-					
-					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
-                                        $destfqdn=$hostservh->quote($destfqdn);
-                                        $country=$hostservh->quote($country);
-                                        $city=$hostservh->quote($city);
-
-					my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
-			        	. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
-					. "'$sourceip','$sourceport','$destip','$destport',"
-					. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
-					if (($rows==-1) || (!defined($rows))) {
-                                		print "Parseproc.pl Fatal Error (inside net loop TCP processing): No net record was altered. Record $entry was not registered.\n";
-                                	} #End of if(($rows==-1)
-				} else {
-				
-				#Record exists as part of the merged netinfo table so we do nothing.
-				
-				} #end of if ( $mergednetshahits[0] == "0") 
-
-			} else {
-				
-			#Record exists (as part of the first thread netinfo table so we do nothing.
-
-			} #end of if( $shahits)...else
-		
-		  } #end of if ( ($destip==$serverip and (($destport=="22" or $sourceport=="22"))) or ( $sourceip==$serverip and (($destport=="22" or $sourceport=="22")))  
-		} # for my $entry... END OF TCP DATA PROCESSING
-		
-		#Beginning of UDP data processing
-		my $tableudp = Linux::Proc::Net::UDP->read(mnt => $netparsedir);
-                for my $entry (@$tableudp) {
-			$transport="udp";
-                        $sourceip=$entry->local_address;
-                        $sourceport=$entry->local_port;
-                        $destip=$entry->rem_address;
-                        $destport=$entry->rem_port;
-                        $nuid=$entry->uid;
-                        $ninode=$entry->inode;
-			my $pid;
-                        my ($pidsyear,$pidsmonth,$pidsday,$pidshour,$pidsmin,$pidssec)=timestamp($epochref,$tzone);
-                        my $socketstr="socket:[$ninode]";
-			
-			my $SQLh=$hostservh->prepare("SELECT pid from $tablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                        $SQLh->execute();
-                        my @pidhits=$SQLh->fetchrow_array();  
-
-                        my @ptablepidhits;
-                        my @ftablepidhits;
-
-                        if ($thnumber == 1) {
-				#If we are the first thread, we look into the merged fileinfo table to populate the previous table pid hits array
-				#@ptablepidhits. The file table pid hits array @pidhits gets populated from the  file table.
-                                $SQLh=$hostservh->prepare("SELECT pid from fileinfo WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                                $SQLh->execute();
-                                @ptablepidhits=$SQLh->fetchrow_array();
-
-				if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" ) {
-                                        #print "thread $thnumber (should be thread 1): UDP: pid hit NOT correlated. \n";
-                                        $pid="8388606"; } elsif ( scalar(@ptablepidhits) != "0" ) {
-                                        $pid=$ptablepidhits[0];
-                                        #print "thread $thnumber (should be thread 1): UDP: pid hit correlated from merged fileinfo table: $pid \n";
-                                        } elsif ( scalar(@pidhits) != "0") {
-                                        $pid=$pidhits[0];
-                                        #print "thread $thnumber (should be thread 1): UDP: pid hit correlated from current thread table: $pid \n";
-                                        }
-
-				
-                        } else {
-
-				#Here we are not the first thread, we look into the previous thread table to populate the previous table pid hits array
-				# @ptablepidhits. The file table pid hits array @ftablepidhits gets populated from the first of the 8 threads file table.
-				$SQLh=$hostservh->prepare("SELECT pid from $ptablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                                $SQLh->execute();
-                                @ptablepidhits=$SQLh->fetchrow_array();
-                                $SQLh=$hostservh->prepare("SELECT pid from $ftablefilename WHERE filename='$socketstr' AND (ruid='$nuid' OR euid='$nuid')  " );
-                                $SQLh->execute();
-                                @ftablepidhits=$SQLh->fetchrow_array();
-
-
-
-                                if ( scalar(@pidhits)=="0" && scalar(@ptablepidhits)=="0" && scalar(@ftablepidhits)=="0" ) {
-                                	#print "thread $thnumber: UDP: pid hit NOT correlated. \n";
-                                	$pid="8388606"; } elsif (  scalar(@ptablepidhits) != "0" ) {
-                                	$pid=$ptablepidhits[0];
-                                	#print "thread $thnumber: UDP: pid hit correlated from the previous thread fileinfo table: $pid \n";
-                                } elsif ( scalar(@ftablepidhits) != "0") {
-                                	$pid=$ftablepidhits[0];
-                                	#print "thread $thnumber: UDP: pid hit correlated from thread 1 fileinfo table: $pid \n";
-                                } elsif ( scalar(@pidhits) != "0") {
-                                	$pid=$pidhits[0];
-                                	#print "thread $thnumber: UDP: pid hit correlated from current thread table: $pid \n";
-                                }
-
-
-			} #end of if ($thnumber == 1)...
-			
-					
-			#Determining the IP version depends on the contents of the $sourceIP and $destip 
-			#strings. We also check what goes in the database.
-			if ( $sourceip =~ /\./ && $destip =~ /\./ ) { $ipversion="4"; }
-                        elsif ( $sourceip =~ /\:/ && $destip =~ /\:/) { $ipversion="6"; }
-                        else {
-                                 die "Parseproc.pl Error (inside the net loop IP determination): Unknown type of IP address in file $fitopr (UDP processing section). Are we getting the right type of data? \n";
-
-                        }
-			
-			my $digeststr1=$sourceip.$sourceport.$destip.$destport.$nuid.$ninode.$pid.$transport.$ipversion; 
-			my $shanorm=sha1_hex($digeststr1);
-                        $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $tablenetname WHERE shasum='$shanorm' AND transport='udp' ");
-                        $SQLh->execute();
-                        my @shahits=$SQLh->fetchrow_array();
-                        if ( $shahits[0]=="0") { 
-				if (defined $ptablenetname) {
-					#We are not the first thread here. Does the recorc exists in the previous thread?
-					my $SQLh=$hostservh->prepare("SELECT COUNT(*) FROM $ptablenetname where shasum='$shanorm' AND transport='udp' ");
-					$SQLh->execute();
-					my @nshahits=$SQLh->fetchrow_array();
-					if ($nshahits[0]=="0") {
-						#Record does not exist in the previous thread netinfo table, we need to SQL insert it. 
-						my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-						#DNS resolve when you SQL insert to avoid DNS lookup time penalties.
-						my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
-                        			if (!$resdestip ) {
-                                			$destfqdn="NODESTFQDN"; } else {
-                                			$destfqdn=$resdestip;
-                        			}
-						
-						#GeoIP2 locate
-                                                my ($country,$city)=pofrgeoloc($destip,$ipversion);
-						#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
-                                                $destfqdn=$hostservh->quote($destfqdn);
-                                                $country=$hostservh->quote($country);
-                                                $city=$hostservh->quote($city);
-
-						my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
-                                   		. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
-                                   		. "'$sourceip','$sourceport','$destip','$destport',"
-                                   		. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
-                                		if (($rows==-1) || (!defined($rows))) {
-                                        		print "Parseproc.pl Fatal Error (inside net loop UDP processing): No net record was altered. Record $entry was not registered.\n";
-                                        	}} else {
-						#Record exists we do nothing
-						#print "parsenet.pl Info: UDP record exists \n";
-						
-					} #end of ifelse
-
-				} #end of if (defined...
-				#Here we are part of thread number 1 so, we SQL insert the record only if it does not exist in the merged netinfo thread.
-				$SQLh=$hostservh->prepare("SELECT COUNT(*) FROM netinfo WHERE shasum='$shanorm' AND transport='udp' ");
-                                $SQLh->execute();
-                                my @mergednetshahits=$SQLh->fetchrow_array();
-
-				if ( $mergednetshahits[0] == "0") {
-					my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-					#DNS resolve when you SQL insert to avoid DNS lookup time penalties.
-					my $resdestip=nslookup(host => "$destip", type => "PTR", timeout => "2");
-                                        if (!$resdestip ) {
-                                        	$destfqdn="NODESTFQDN"; } else {
-                                                $destfqdn=$resdestip;
-                                        }
-
-					#Quote the destfqdn in order not to break the SQL INSERT statement
-					$destfqdn=$hostservh->quote($destfqdn);
-					#GeoIP2 locate
-                                        my ($country,$city)=pofrgeoloc($destip,$ipversion);
-
-					#Quote the destfqdn,country and city fields in order not to break the SQL INSERT statement
-                                        $destfqdn=$hostservh->quote($destfqdn);
-                                        $country=$hostservh->quote($country);
-                                        $city=$hostservh->quote($city);
-
-
-					my $rows=$hostservh->do ("INSERT INTO $tablenetname(shasum,uid,pid,inode,transport,ipversion,sourceip,sourceport,destip,destport,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec,destfqdn,country,city)"
-                                	. "VALUES ('$shanorm','$nuid','$pid','$ninode','$transport','$ipversion',"
-                                	. "'$sourceip','$sourceport','$destip','$destport',"
-                                	. "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs',$destfqdn,$country,$city)" );
-					if (($rows==-1) || (!defined($rows))) {
-                                        	print "Parseproc.pl Fatal Error (inside the net loop UDP section): No process record was altered. Record $entry was not registered.\n";
-                                        } #end of if (($rows==-1) 
-
-				} else {
-                                	#Record exists as part of the merged netinfo table so we do nothing.
-                                } #end of if ( $mergednetshahits[0] == "0") ... else
-                             
-
-                         } else {
-			#Record exists as part of the current netinfo table of thread 1 so we do nothing.
-
-			 }#end of if ( $shahits[0]=="0") else....(UDP Section)  
- 
-		} #End of UDP data processing for my for my $entry (@$tableudp) 
-
-		unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink net file /home/$threadspecificpath/dev/shm/$fitopr: $!";
-		
-		#Increase the net file counter 
+		fileothnet($fitopr,$thnumber,$threadspecificpath,$tablenetname,$tablefilename,$ftablefilename,$ptablenetname,$ptablefilename,$pseudoprocdir,$ldb,$user,$netparsedir,$hostname,$dbusername,$dbpass);
 		$netfcounter=$netfcounter+1;
-
-		if ($netfcounter == $threaddirremvindex	) {	
-		#The very last thing we do inside the per thread  context is to cleanup the thread specific directories
-		#from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case 
-		#something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
-		#as we do not like living dangerously. We start with the reference files.
-		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "parseproc.pl Warning: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
-		rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
-		rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
-		rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
-		unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp  : $!";
-		unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp  : $!";
-		rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
-		rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
-
-		}
-
-       } #end of my $fitopr (@mynetfiles)
+		print "Inside parsefiles: Thread $thnumber: Inside the mynetfiles loop netfcounter is $netfcounter while threaddirremvindex is $threaddirremvindex \n";
+	}
 	
+	if ($netfcounter == $threaddirremvindex ) {
+        	#The very last thing we do inside the per thread  context is to cleanup the thread specific directories
+                #from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case
+                #something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
+                #as we do not like living dangerously. We start with the reference files.
+                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
+		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.net.gz in the the thread specific directory $threadspecificpath: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp  : $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp  : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
+
+	}
+
 	#And finally we are done by removing the .pofrthread file to signal that the dir is ready for another procparse.pl process
 	#to start processing data again.
 	unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Could not unlink the .pofrthread file for user $user due to: $!";
-
-	#Disconnect from the host database
-	$hostservh->disconnect;
 
 	
 } #end of sub parsefiles

@@ -1,4 +1,4 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.36.0/x86_64-linux -I ../pofrperl/lib/5.36.0
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.36.0/x86_64-linux -I ../pofrperl/lib/5.36.0 -I ../lib
 #
 use lib '../pofrperl/lib/site_perl/5.36.0';
 
@@ -37,6 +37,7 @@ use IO::File;
 use Time::HiRes qw(usleep clock_gettime gettimeofday);
 use POSIX;
 use IO::Compress::Gzip;
+use POFR;
 
 my $sprocpid="$$";
 #Sampling delay - Increased for development mode. Original value 300000.
@@ -126,7 +127,11 @@ close $P;
 	 	close(FDD);
 	 	my @openfiles;
 	 	foreach my $fd (@fds) {
-			push(@openfiles,readlink"/proc/$proc/fd/$fd");
+			#Sanitize the filename to ensure we do not have unwanted characters
+			my $sfn=readlink"/proc/$proc/fd/$fd";
+			$sfn=sanitize_filename($sfn);
+			push(@openfiles,$sfn);
+
 		} #end of foreach my $fd
     
     		if ($#openfiles=='-1') {
