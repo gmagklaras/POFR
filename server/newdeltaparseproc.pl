@@ -869,9 +869,9 @@ sub fileothnet {
 	my $deltaudpv6join=join("", @deltaudpv6data);
 	my $joinedudpdata="$deltaudpjoin $deltaudpv6join";
 
-	#Debug
-	print "fileothnet: joinedtcpdata: @deltatcpdata \n @deltatcpv6data \n";
-	print "fileothnet: joinedudpdata: @deltaudpdata \n @deltaudpv6data \n";
+	#Debug - Enable when you need extensive debugging but have plenty of disk space for the debug file
+	#print "fileothnet: joinedtcpdata: @deltatcpdata \n @deltatcpv6data \n";
+	#print "fileothnet: joinedudpdata: @deltaudpdata \n @deltaudpv6data \n";
 
 	open my $jtcp, ">", "$pseudoprocdir/tcp" or die "newdeltaparseproc.pl Error: Inside fileothnet: User $user, thread $thnum: Cannot create pseudoproc file for tcpdata. User $user processing client file $fitopr : $!";
         print $jtcp "$joinedtcpdata";
