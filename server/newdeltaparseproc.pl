@@ -302,9 +302,9 @@ sub filerefprocess {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                                        $sanitizedpf=$hostservh->quote($sanitizedpf);
 									my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
+									$sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
@@ -406,9 +406,9 @@ sub filerefprocess {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                                        $sanitizedpf=$hostservh->quote($sanitizedpf);
 									my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
+									$sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
@@ -590,9 +590,9 @@ sub fileothprocess {
 									#irrelevant name, throw it away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                                        $sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
+									$sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,ruid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
@@ -693,9 +693,9 @@ sub fileothprocess {
 									#Throw away
 								} else {
 									my ($cyear,$cmonth,$cday,$chour,$cmin,$csec)=timestamp($epochref,$tzone);
-                                                                        $sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $filedigeststr=$sanitizedpf.$pruid.$pid.$ppid.$procname;
                                                                         my $shapf=sha1_hex($filedigeststr);
+									$sanitizedpf=$hostservh->quote($sanitizedpf);
                                                                         my $rows=$hostservh->do ("INSERT INTO $tablefilename(shasum,filename,uid,euid,rgid,egid,command,pid,ppid,tzone,cyear,cmonth,cday,chour,cmin,csec,cmsec)"
                                                                         . "VALUES ('$shapf',$sanitizedpf,'$pruid','$peuid','$prgid','$pegid','$procname','$pid','$ppid',"
                                                                         . "'$tzone','$cyear','$cmonth','$cday','$chour','$cmin','$csec','$msecs')" );
