@@ -959,7 +959,7 @@ sub procuser {
 	print "User $user:Detected $tarballnum tarballs and thus $jobstoforkpercore jobs to fork per core. \n Tar1 array is : @tar1 \n\nTar2 array is : @tar2 \n\nTar3 array is : @tar3 \n\n .......\n Tar32 array is: @tar32 \n\n";
 	
 	if ( $jobstoforkpercore==0 ) {
-		die "We do not have enough tarballs to start processing and keep all the cores busy. Will try again later \n";
+		die "newdeltaparseproc.pl: We do not have enough tarballs to start processing and keep all the cores busy. Will try again later \n";
 	} else { 
 		
 		my $pm1 = Parallel::ForkManager->new(32);
@@ -1050,21 +1050,24 @@ sub parsefiles {
 	#only! Each MERGE table should not have data beyond a 24 hour period for performance purposes.
 	#See the foreach my $tarfile loop below.
 	my ($markyear,$markmonth,$markday,$markhour,$markmin,$marksec)=timestamp($firststamp,$firsttz);
-	
-	
+
+	#The threadspecificpath should have the name convention: /home/$user/proc/$firststamp-$laststamp 
 	#print "First tarball has timestamp is: $firststamp. Last file has timestamp: $laststamp. \n"; 
 	if (!(-e "/home/$user/proc/$firststamp-$laststamp" && "/home/$user/proc/$firststamp-$laststamp")) {
-		mkdir "/home/$user/proc/$firststamp-$laststamp" or die "Parseproc.pl Error: Cannot create thread specific proc subdirectory entry for user $user. Full disk or other I/O issue?\n";
+		mkdir "/home/$user/proc/$firststamp-$laststamp" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: Cannot create thread specific proc subdirectory entry /home/$user/proc/$firststamp-$laststamp for user $user. Full disk or other I/O issue?\n";
 		$threadspecificpath="/home/$user/proc/$firststamp-$laststamp"; 
 	} else {
 		$threadspecificpath="/home/$user/proc/$firststamp-$laststamp";
 	}
 
-	#The thread needs to become aware now on whether it has a previous one that should be checked, so that the we facilitate 
-	#the data reduction process: Whatever process or file record existing in the current table or the respective tables of the previous thread
-	#should not be SQL inserted, based on the shasum info.
-	
+	#The thread needs to become aware now on whether it has a previous one that should be checked, so that the we facilitate
+        #the data reduction process: Whatever process or file record existing in the current table or the respective tables of the previous thread
+        #should not be SQL inserted, based on the shasum info.
 	my($previousfirststamp,$previouslaststamp,$thnumber,$ftfts,$ftlts)=determinepreviousthread("$user","$firststamp");
+
+	#Renaming the orifinal .pofrthread lock file to make it thread number specific, helps debugging
+	rename("/home/$user/.pofrthread$timeref$pspid", "/home/$user/.pofrthread$timeref$pspid"."isthreadnumber$thnumber") || die ( "newdeltaparseproc.pl Error: Could not rename thread flag /home/$user/.pofrthread$timeref$pspid as /home/$user/.pofrthread$timeref$pspid"."isthreadnumber$thnumber" );
+
 	my $ptablenetname;
 	my $ptablefilename;
 	my $ptableprocname;
@@ -1084,8 +1087,6 @@ sub parsefiles {
 		
 	} #End of if $previousfirststamp eq "none" 
 
-	#Debug
-	print "I am thread number $thnumber for user $user \n";
 
 	#Now start checking the integrity of the tarballs and move them to the proper thread subdirs for processing
 	foreach my $tarfile (@$tarballref) {
@@ -1132,11 +1133,11 @@ sub parsefiles {
 	#Did we have a bunch of empty files corrupt files? If yes, we need to cleanup and terminate early
 	#to ensure that we do not leave hanging threads
 	if ( !@myprocfiles ) {
-		rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
-		rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
-		rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath: $!";
-		unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the .pofrthread file for user $user due to: $!";
-		die "Thread $thnumber for user $user: Totally empty files means that we have to exit and clean up early. \n";
+		rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "newdeltaparseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
+		rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "newdeltaparseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
+		rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "newdeltaparseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the thread specific directory $threadspecificpath: $!";
+		unlink "/home/$user/.pofrthread$timeref$pspid"."isthreadnumber$thnumber" or warn "newdeltaparseproc.pl Warning: Thread $thnumber on user $user: Could not unlink the .pofrthread file for user $user due to: $!";
+		die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER $thnumber for user $user: Totally empty files means that we have to exit and clean up early. \n";
 	}
 
 	#my @sorted_numbers = sort @myprocfiles;
@@ -1277,7 +1278,7 @@ sub parsefiles {
 	); #end of @tca
 
 	for my $sqlst (@sqltca) {
-		print "parseproc.pl Debug: Thread number $thnumber : Creating tables $tableprocname, $tablefilename, $tablenetname . \n";
+		print "newdeltaparseproc.pl Info: Inside parsefiles soubroutine: THREAD NUMBER $thnumber : Creating tables $tableprocname, $tablefilename, $tablenetname . \n";
 		$hostservh->do($sqlst);
 	}
 		
@@ -1293,19 +1294,19 @@ sub parsefiles {
 	if ( $thnumber==1) {
 		#If yes, make the user dirs (if they do not exist) and also your own thread specific subdirs as required
 		if (!(-e "/dev/shm/pofrserver/$user" && "/dev/shm/pofrserver/$user")) {
-			mkdir "/dev/shm/pofrserver/$user" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
-			mkdir "/dev/shm/pofrserver/$user/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $!\n"; 
-			print "Thread 1: made the /dev/shm/ user dirs, about to go to sleep for 3 secs. \n";
+			mkdir "/dev/shm/pofrserver/$user" or die "newdeltaparseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
+			mkdir "/dev/shm/pofrserver/$user/net" or die "newdeltaparseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $!\n"; 
+			print "newdeltaparseproc.pl Info: Inside parsefiles subroutine: Thread 1: made the /dev/shm/ user dirs, about to go to sleep for 3 secs. \n";
 			usleep(20000000);
-			print "Thread 1: Waking up from a 3 sec sleep, and about to make the thread 1 subdir for the first time. \n"; 
-			mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1 (is really $thnumber) FIRST TIME: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $! \n";
-                mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
+			print "newdeltaparseproc.pl Info: Inside parsefiles subroutine: Thread 1: Waking up from a 3 sec sleep, and about to make the thread 1 subdir for the first time. \n"; 
+			mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER 1 (is really $thnumber) FIRST TIME: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $! \n";
+                mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER 1 FIRST TIME: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
 			$pseudoprocdir="/dev/shm/pofrserver/$user/$firststamp-$laststamp/net";
 			$netparsedir="/dev/shm/pofrserver/$user/$firststamp-$laststamp";
 		} else {
  			#Otherwise as thread 1 make only your thread specific  subdirs (the next time thread 1 is invoked after the first time)
- 			mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
-                	mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
+ 			mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
+                	mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER 1: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue?: $! \n";
 			$pseudoprocdir="/dev/shm/pofrserver/$user/$firststamp-$laststamp/net";
 			$netparsedir="/dev/shm/pofrserver/$user/$firststamp-$laststamp";
 
@@ -1316,11 +1317,11 @@ sub parsefiles {
 		#All other threads sleep for 4 secs.
 		usleep(40000000);
 		if (!(-e "/dev/shm/pofrserver/$user/$firststamp-$laststamp" && "/dev/shm/pofrserver/$user/")) {
-                        mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $!\n";
+                        mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or die "newdeltaparseproc.pl Error: Inside parsefiles subroutine: THREAD NUMBER $thnumber: Cannot create user $user/$firststamp-$laststamp directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $!\n";
                 }
 
                 if (!(-e "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" && "/dev/shm/pofrserver/$user/net")) {
-                        mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "Parseproc.pl Error: Thread number $thnumber: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $!\n";
+                        mkdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or die "newdeltaparseproc.pl Error: THREAD NUMBER $thnumber: Cannot create user $user/$firststamp-$laststamp/net directory under /dev/shm/pofrserver. Full memory or other I/O issue? : $!\n";
                 }
 
 		$pseudoprocdir="/dev/shm/pofrserver/$user/$firststamp-$laststamp/net";
@@ -1397,7 +1398,7 @@ sub parsefiles {
 		print "Thread no. 1, on $user proceeding. \n";
  		}
 	
-	print "Thread number $thnumber on $user is resuming from sleeping. \n";
+	print "newdeltaparseproc.pl Info: Inside parsefiles subroutine: Thread number $thnumber on $user is resuming from sleeping. \n";
 	#Start the process parsing entries
 	#Shift the first process file of the thread This is going to be the process reference file for the delta.
 	my $fref=shift (@myprocfiles);
@@ -1430,21 +1431,21 @@ sub parsefiles {
                 #from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case
                 #something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
                 #as we do not like living dangerously. We start with the reference files.
-                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
-		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: Thread: $thnumber: Could not unlink the reference file: referencefile.net.gz in the the thread specific directory $threadspecificpath: $!";
-                rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
-                rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
-                rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory $threadspecificpath: $!";
-                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp  : $!";
-                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp" or warn "parseproc.pl Warning: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp  : $!";
-                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
-                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or warn "parseproc.pl Warning: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
+                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
+		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.net.gz in the the thread specific directory $threadspecificpath: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
+                rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath: $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/tcp  : $!";
+                unlink "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific file /dev/shm/pofrserver/$user/$firststamp-$laststamp/net/udp  : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp/net" or warn "newdelraparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp/net under the thread specific path $threadspecificpath : $!";
+                rmdir "/dev/shm/pofrserver/$user/$firststamp-$laststamp" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory /dev/shm/pofrserver/$user/$firststamp-$laststamp under the thread specific path $threadspecificpath : $!";
 
 	}
 
 	#And finally we are done by removing the .pofrthread file to signal that the dir is ready for another procparse.pl process
 	#to start processing data again.
-	unlink "/home/$user/.pofrthread$timeref$pspid" or warn "parseproc.pl Warning: Could not unlink the .pofrthread file for user $user due to: $!";
+	unlink "/home/$user/.pofrthread$timeref$pspid"."isthreadnumber$thnumber" or die "newdeltaparseproc.pl Error: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the .pofrthread file /home/$user/.pofrthread$timeref$pspid"."isthreadnumber$thnumber for user $user due to: $!";
 
 	
 } #end of sub parsefiles

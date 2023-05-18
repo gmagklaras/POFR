@@ -828,13 +828,15 @@ sub determinepreviousthread {
         my $firstthreadfts;
         my $firstthreadlts;
 
-        opendir(THORDER, "/home/$user/proc") || die "parseproc.pl (inside determineprevioustimestamps function) Error: can't open user directory /home/$user/proc to perform thread ordering due to : $!";
+        opendir(THORDER, "/home/$user/proc") || die "POFR.pm Error: Inside the determinepreviousthread subroutine: THREAD NUMBER $threadnum: Can't open user directory /home/$user/proc to perform thread ordering due to : $!";
         my @threadirs = sort grep { /^[1-9][0-9]*\-[1-9][0-9]/ } readdir(THORDER);
         my @timestampsarray;
         foreach my $tdir (@threadirs) {
                 push @timestampsarray, split "-",$tdir;
         } #end of foreach my $tdir
 
+	#Debug
+	print "Determinepreviousthread subroutine: timestampsarray is: @timestampsarray \n";
 
         my @threadfts=($timestampsarray[0],$timestampsarray[2],$timestampsarray[4],$timestampsarray[6],$timestampsarray[8],$timestampsarray[10],$timestampsarray[12],$timestampsarray[14],$timestampsarray[16],$timestampsarray[18],$timestampsarray[20],$timestampsarray[22],$timestampsarray[24],$timestampsarray[26],$timestampsarray[28],$timestampsarray[30],$timestampsarray[32],$timestampsarray[34],$timestampsarray[36],$timestampsarray[38],$timestampsarray[40],$timestampsarray[42],$timestampsarray[44],$timestampsarray[46],$timestampsarray[48],$timestampsarray[50],$timestampsarray[52],$timestampsarray[54],$timestampsarray[56],$timestampsarray[58],$timestampsarray[60],$timestampsarray[62]);
         my @threadlts=($timestampsarray[1],$timestampsarray[3],$timestampsarray[5],$timestampsarray[7],$timestampsarray[9],$timestampsarray[11],$timestampsarray[13],$timestampsarray[15],$timestampsarray[17],$timestampsarray[19],$timestampsarray[21],$timestampsarray[23],$timestampsarray[25],$timestampsarray[27],$timestampsarray[29],$timestampsarray[31],$timestampsarray[33],$timestampsarray[35],$timestampsarray[37],$timestampsarray[39],$timestampsarray[41],$timestampsarray[43],$timestampsarray[45],$timestampsarray[47],$timestampsarray[49],$timestampsarray[51],$timestampsarray[53],$timestampsarray[55],$timestampsarray[57],$timestampsarray[59],$timestampsarray[61],$timestampsarray[63]);
