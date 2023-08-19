@@ -1,5 +1,5 @@
 #producepofrperl -- Simple bash script to create a POFR Perl release from source with all the modules
-#Currently based on Perl 5.36.0
+#Currently based on Perl 5.38.0
 #George Magklaras -- Steelcyber Scientific
 #Copyright (C) 2021,2022,2023 Georgios Magklaras
 
@@ -9,11 +9,11 @@ echo "#################################"
 mkdir ./perlbuild
 cd ./perlbuild
 echo "################################"
-echo "#Obtaining Perl 5.36.0...      #"
+echo "#Obtaining Perl 5.38    #"
 echo "################################"
-wget https://www.cpan.org/src/5.0/perl-5.36.0.tar.gz
-tar xvf perl-5.36.0.tar.gz
-cd ./perl-5.36.0/
+wget https://www.cpan.org/src/5.0/perl-5.38.0.tar.gz
+tar xvf perl-5.38.0.tar.gz
+cd ./perl-5.38.0/
 echo "################################"
 echo "Config and compilation stage: #"
 echo "################################"
@@ -22,7 +22,7 @@ mkdir ~/pofrperl
 unset PERL_MB_OPT
 unset PERL_MM_OPT
 unset PERL_LOCAL_LIB_ROOT
-export PERL5LIB=~/pofrperl/lib/site_perl/5.36.0
+export PERL5LIB=~/pofrperl/lib/site_perl/5.38.0
 export PATH=~/pofrperl/bin:$PATH
 echo "################################"
 echo "#POFR PERL MODULE INSTALLATION#"
