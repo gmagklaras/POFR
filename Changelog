@@ -1,16 +1,25 @@
+v1.3.1 named "Grace Hopper" (Aug 20, 2023): 
+This is a minor version upgrade release:
+-Bug fixes:
+  - newdeltaparseproc.pl: Generating the file shasum before or after quoting creates inconsistencies in the shasum (same file access can have two shasum digests). The correct behavior is to generate the shasum BEFORE quoting. 
+    So, the correct sequence of actions is sanitize the filename, then generate the sha_hex and then quote the filename, prior SQL inserting it. All differences/inconsistencies have been corrected now.
+  - scanproc.pl and tuneperf.pl:  Fix a bug where whitespace in a filename breaks the filename into multiple RDBMS entries.(the client code generates the bug).
+-Improvements/upgrades/compatibility issues:
+  - newdeltaparseproc.pl and POFR.pm: Implemented and improved the delta parsing for network endpoint data (processnetfile subroutine) to achieve delta parse performance improvements on systems with high network endpoint activity.
+  - Upgraded POFR Perl release (v5.36.0->5.38.0)
+  - Updated the IP2LOCATION LITE DB to the August 2023 release.
+
 v1.2.3 named "Mary Jackson" (Apr 8, 2023):
 This is a bug fix release:
 -Bug fixes:
   - newdeltaparseproc.pl: Bug fix/enhancement:  If the server IP is not DNS resolvable, get it via Sys::Hostname. 
-    Backpopted from the makenetworkdelta branch.
+    Backported from the makenetworkdelta branch.
   - newdeltaparseproc.pl: Fix the thread timing with thread number 10. It is supposed to sleep for 225 seconds, instead it was sleeping for 22.5 seconds, 
     so it was firing up early. This could skew data processing.
   - pofrclientderegister.pl: Corrected regular expression to ensure we do not delete the pofr client utilities when we remove a system.
 -Impovements/upgrades/compatibility issues:
   - Updated the IP2LOCATION LITE DB to the April 2023 release.
-
-Due to the severity of the bugs, all users are advised to switch immediately to release v1.2.3.
-
+Due to the severity of some of these bugs, all users are advised to immediately update to v.1.2.3.  
 v1.2.2 named "Mary Jackson" (Mar 17, 2023):
 This is a bug fix and enhancement release:
 -Bug fixes:
