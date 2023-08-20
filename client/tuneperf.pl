@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.36.0/x86_64-linux -I ../pofrperl/lib/5.36.0 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.0/x86_64-linux -I ../pofrperl/lib/5.38.0 -I ../lib
 #
-use lib '../pofrperl/lib/site_perl/5.36.0';
+use lib '../pofrperl/lib/site_perl/5.38.0';
 
 #tune2perf.pl: This script implements a single cycle of the /proc filesystem.
 #To be used with time and/or perf stat in order to time a single cycle 

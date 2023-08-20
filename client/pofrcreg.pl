@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.36.0/x86_64-linux -I ../pofrperl/lib/5.36.0
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.0/x86_64-linux -I ../pofrperl/lib/5.38.0
 #
-use lib '../pofrperl/lib/site_perl/5.36.0';
+use lib '../pofrperl/lib/site_perl/5.38.0';
 
 #pofrcreg.pl - A script that registers a POFR client to a server.
 

@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.36.0/x86_64-linux -I ../pofrperl/lib/5.36.0 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.0/x86_64-linux -I ../pofrperl/lib/5.38.0 -I ../lib
 #
-use lib '../pofrperl/lib/site_perl/5.36.0';
+use lib '../pofrperl/lib/site_perl/5.38.0';
 
 #scanproc.pl: This script parses the /proc filesystem for process and file event data 
 #Started and stopped by the POFR CLIENT startclient.pl and stopclient.pl scripts.
