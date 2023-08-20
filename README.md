@@ -44,7 +44,7 @@ For the server part, we recommend:
 
 with a MariaDB (versions 10.5 and 10.6) RDBMS backend.
 
-Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.36.0)). 
+Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.38.0)). 
 
 In addition, you will need to ensure that: 
 * The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
