@@ -35,16 +35,16 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 * RHEL7/CentOS 7
 * RHEL8/CentOS 8/AlmaLinux 8/Rocky Linux 8
 * RHEL9/CentOS 9/AlmaLinux 9/Rocky Linux 9
-* Fedora 33/34/35/36/37
+* Fedora 33/34/35/36/37/38/39
 * Ubuntu 18.04 LTS/20.04 LTS/22.04.1 LTS
 
 For the server part, we recommend:
-* Fedora 35/36 
+* Fedora 38 
 * RHEL/AlmaLinux/Rocky Linux 9 
 
 with a MariaDB (versions 10.5 and 10.6) RDBMS backend.
 
-Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.38.0)). 
+Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.38.2)). 
 
 In addition, you will need to ensure that: 
 * The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
@@ -59,7 +59,7 @@ POFR distributes a copy of the IP2Location™ Lite, an open source geolocation d
 
 POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
 
-The latest production release of POFR is v1.3.1 named "Grace Hopper" (Aug 20, 2023). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
+The latest production release of POFR is v1.3.2 named "Katherine Johnson" (Dec 18, 2023). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
 
 The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
 
