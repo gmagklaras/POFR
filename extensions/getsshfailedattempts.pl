@@ -55,7 +55,7 @@ my $first_attempt_time;
 my $last_attempt_time;
 
 while (my $line = <$fh>) {
-    if ($line =~ /^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}).*Failed password for (\w+|\S+ user \w+) from (\d+\.\d+\.\d+\.\d+|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})/) {
+    if ($line =~ /^(\w{3}\s+\d{1,3}\s+\d{1,3}:\d{1,3}:\d{1,3}).*Failed password for (\w+|\S+ user \w+) from (\d+\.\d+\.\d+\.\d+|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})/) {
         my $timestamp = $1;
         my $username = $2;
         my $ip_address = $3;
@@ -108,15 +108,16 @@ foreach my $ip (@sorted_ips) {
 # Summary
 my $unique_ips = scalar keys %failed_attempts;
 my $total_passwords = 0;
+my $unique_countries = scalar keys %unique_countries;
 
 foreach my $ip (keys %failed_attempts) {
     $total_passwords += scalar keys %{$failed_attempts{$ip}};
 }
 
 print "Summary:\n";
-print "The system got probed by $unique_ips number of IP addresses.\n";
+print "The system got probed by $unique_ips IP addresses.\n";
 print "Total number of passwords tried: $total_passwords\n";
-print "Probed from the following countries (sorted by failed attempts):\n";
+print "Probed from the following $unique_countries countries (sorted by failed attempts):\n";
 
 # Sort countries by failed attempts in descending order
 foreach my $country (sort { $unique_countries{$b}{'attempts'} <=> $unique_countries{$a}{'attempts'} } keys %unique_countries) {
