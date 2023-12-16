@@ -2,12 +2,13 @@
 Summary: Restricted shell for ssh based file services
 Name: scponly
 Version: 4.8
-Release: 29%{?dist}
+Release: 32%{?dist}
 License: BSD
 URL: http://sublimation.org/scponly/
 Source: http://downloads.sf.net/scponly/scponly-%{version}.tgz
 Patch0: scponly-install.patch
 Patch1: scponly-4.8-elif-gcc44.patch
+Patch2: scponly-configure-c99.patch
 
 # Checks only for location of binaries
 BuildRequires: make
@@ -27,6 +28,7 @@ as a wrapper to the "tried and true" ssh suite of applications.
 %setup -q
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %build
 # config.guess in tarball lacks ppc64
@@ -57,7 +59,21 @@ make install DESTDIR=%{buildroot}
 %config(noreplace) %{_sysconfdir}/scponly/*
 
 %changelog
-* Wed Jan 04 2023 Steelcyber Scientific <georgios@mail.steelcyber.com> - 4.8-29-rhel9
+* Sat Dec 16 2023 Steelcyber Scientific Georgios Magklaras <georgios@mail.steelcyber.com> - 4.8-32-rhel9
+- Rebuilt for POFR Release v.1.3.2  https://github.com/gmagklaras/POFR/releases/tag/v1.3.2 
+
+* Sat Jan 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.8-32
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Tue Jan 10 2023 Florian Weimer <fweimer@redhat.com> - 4.8-31
+- Port configure script to C99
+
+* Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.8-30
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Steelcyber Scientific Georgios Magklaras <georgios@mail.steelcyber.com> - 4.8-29-rhel9
+- Rebuilt for POFR Release v.1.3.1 https://github.com/gmagklaras/POFR/releases/tag/v1.3.1
+
 * Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.8-29
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
