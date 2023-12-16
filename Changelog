@@ -4,6 +4,7 @@ Imrpovements/upgrades/compatibility issues:
   - Upgrade of POFR Perl release from version 5.38.0 to version 5.38.2 addressing all security and bug issues of PERL.
   - Upgrade of scponly for RHEL 9 and derivaties from version 4.8.29 to version 4.8.32.
   - Upgrade of the IP2LOCATION LITE DB to December 2023 version.
+  - Added the getsshfailedattempts.pl tool to help admins/devops handle SSH brute force attacks and cross reference data from the OS journal with data collected from the relational layer.
 
 v1.3.1 named "Grace Hopper" (Aug 20, 2023): 
 This is a minor version upgrade release:
