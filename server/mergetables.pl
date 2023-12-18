@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.0/x86_64-linux -I ../pofrperl/lib/5.38.0 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.2/x86_64-linux -I ../pofrperl/lib/5.38.2 -I ../lib
 ##
-use lib '../pofrperl/lib/site_perl/5.38.0';
+use lib '../pofrperl/lib/site_perl/5.38.2';
 
 
 #mergetables.pl : Called periodically by the POFR delta parser to reduce clutter and the number of actively parsed tables for better performance 

@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.0/x86_64-linux -I ../pofrperl/lib/5.38.0 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.2/x86_64-linux -I ../pofrperl/lib/5.38.2 -I ../lib
 ###
-use lib '../pofrperl/lib/site_perl/5.38.0';
+use lib '../pofrperl/lib/site_perl/5.38.2';
 
 ##mergearchive.pl -- This POFR engine script created the archive POFR tables, in order to reduce rendundancy of info. Called manually by the POFR server 
 #administrator.
