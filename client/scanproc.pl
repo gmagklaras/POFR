@@ -169,7 +169,7 @@ while (1==1) {
 
 	 } #END OF foreach my $proc
 	
-	close($WRDZ);
+	close(WRDZ);
 
 	#Here we sample the network data now
 	#Get the IPv4 endpoints
@@ -190,8 +190,8 @@ while (1==1) {
 	
 	#Here we construct the network data filename from the time stamp
 	open(WRDNETZ, '>', "/dev/shm/$secs$pmicrosecs-$tz.net") or die $!;
-	$WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
-	close($WRDNETZ);
+	WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
+	close(WRDNETZ);
 
 	usleep($sdelay);
 } #END OF while loop
