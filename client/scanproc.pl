@@ -97,19 +97,12 @@ $sprocpid="$sprocpid,$sendprocpid";
 print "The combined pid string is $sprocpid \n";
 
 while (1==1) {
-	opendir(DIR, "/proc") || die "can't opendir /proc: $!";
-	my @procs = grep { /^[1-9][0-9]*/  } readdir(DIR);
-	closedir(DIR);
+	opendir(my $dir, "/proc") || die "can't opendir /proc: $!";
+	my @procs = grep { -d "/proc/$_" && /^\d+$/ } readdir($dir);
+	closedir($dir);
 
 	my $timeref;
 
-	#Debug
-	#print "Processes are: @procs \n";
-
-	#Get the timeref
-	#open(TMR, "<","/proc/uptime");
-	#my @timerefa=<TMR>;
-	#close(TMR);
 	my ($secs, $microsecs)=gettimeofday;
 	my $tz=strftime("%z", localtime());
 
@@ -117,22 +110,8 @@ while (1==1) {
 	#it is not always six digit long
 	my $pmicrosecs=sprintf( "%06d", $microsecs );
 
-	#my @timerefstr=split " ", $timerefa[0];
-
-	#print "timerefstr is: @timerefstr \n";
-	#$timeref=$timerefstr[0];
-	#print "timeref is: $timeref\n";
-
-	#$timeref=~ tr/'.'//d;
-
-	#print "$timeref is now: $timeref \n";
-	#Debug	
-	#print "Pid is: $pspid. Time is: $timeref \n";
-
-
-	my $WRDZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.proc.gz");
-
-	#open WRD , ">", "/dev/shm/$secs$pmicrosecs-$tz.proc";
+	open(WRDZ, '>', "/dev/shm/$secs$pmicrosecs-$tz.proc") or die $!;
+	
 	foreach my $proc (@procs) {
 	 	open(CMD, "<","/proc/$proc/cmdline");
 	 	my $cmdline=<CMD>;
@@ -179,13 +158,14 @@ while (1==1) {
 
 		} #end of foreach my $fd
     
-    		if ($#openfiles=='-1') {
-			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###POFRv1NOOPENFILES \n"); } 
-		else { 
-			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles \n"); 
-    		}	
+		my $output;
+                if (!@openfiles) {
+                        $output = "$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###LUARMv2NOOPENFILES\n";
+                } else {
+                        $output = "$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles\n";
+                }
+                print WRDZ $output;
+
 
 	 } #END OF foreach my $proc
 	
@@ -208,10 +188,8 @@ while (1==1) {
         my @udpv6=<UDPFD6>;
         close(UDPFD6);
 	
-	#Here we construct the filename from the time stamp
-	my $WRDNETZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.net.gz");
-	#open WRDNET , ">", "/dev/shm/$secs$pmicrosecs-$tz.net";
-	select $WRDNETZ;
+	#Here we construct the network data filename from the time stamp
+	open(WRDNETZ, '>', "/dev/shm/$secs$pmicrosecs-$tz.net") or die $!;
 	$WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
 	close($WRDNETZ);
 
