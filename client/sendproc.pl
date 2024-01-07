@@ -37,6 +37,7 @@ use Time::HiRes qw(usleep clock_gettime gettimeofday clock_getres CLOCK_REALTIME
 use Archive::Tar;
 use POSIX;
 use Digest::SHA qw(sha256_hex sha256);
+use IO::Compress::Gzip qw(gzip $GzipError);
 
 my $completiondelay=300000;
 my $initialdatabuildwait=128000000;
@@ -107,6 +108,30 @@ if ($firstssh->error == 0 && $nodealhits < 3 ) {
 	die "sendproc.pl Error: Unable to initiate an initial server SSH connection. CLIENT SHUTDOWN initiated. Bye! \n";
 }
 
+sub compressfiles {
+	opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
+        my @sampleduncompressedprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc/  } readdir(DIR);
+        opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
+        my @sampleduncompressednetfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net/ } readdir(DIR);
+        closedir(DIR);
+
+	#Compress the proc files
+        foreach my $uprocfile (@sampleduncompressedprocfiles) {
+		system "gzip $uprocfile";
+		#my $status = gzip "/dev/shm/$uprocfile" => "/dev/shm/$uprocfile.gz"
+		#or die "sendproc.pl Error: gzip failed for procfile $uprocfile due to: $GzipError\n";
+        }
+
+        #Compress the net files
+        foreach my $unetfile (@sampleduncompressednetfiles) {
+		system "gzip $unetfile";
+		#my $status = gzip "/dev/shm/$unetfile" => "/dev/shm/$unetfile.gz"
+		#or die "sendproc.pl Error: gzip failed for netfile $unetfile due to: $GzipError\n";
+        }
+
+} #End of compressfiles subroutine
+
+
 sub detectandsendleftovers {
 	opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
 	@crashleftovertarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
@@ -157,13 +182,15 @@ sub sendfiles {
 		
 		#First attempt to send a list of any leftovers
 		detectandsendleftovers();
-		#Get a list of the POFR scanned proc and net entries
+		#Then compress the freshly produced proc and netfiles
+		compressfiles(); 
+		#Wait a bit for the files to compress
+		usleep($completiondelay);
+		#Get a list of the POFR scanned proc and net compressed entries
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!"; 
 		@sampledprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc.gz/  } readdir(DIR);
-		closedir(DIR);
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
 		@samplednetfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net.gz/ } readdir(DIR);
-		closedir(DIR);
 		#What about leftovers from being unable to contact the server within an iteration of this infinite loop.
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
 		@previterationtarballs=sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
@@ -212,7 +239,8 @@ sub sendfiles {
 		print "proc slice @ftpscp \n";
 		print "net slice @ftpscpnet \n";
 
-		#Create the tarballs with the files
+
+		#Create the tarballs with the compressed files
 		my ($secs, $microsecs)=gettimeofday;
 		my $tz=strftime("%z", localtime());
 		my $pmicrosecs=sprintf( "%06d", $microsecs );
