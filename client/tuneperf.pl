@@ -36,48 +36,19 @@ use strict;
 use IO::File;
 use Time::HiRes qw(usleep clock_gettime gettimeofday);
 use POSIX;
-use IO::Compress::Gzip;
+#use IO::Compress::Gzip;
 use POFR;
 
 my $sprocpid="$$";
-#Sampling delay - Increased for development mode. Original value 300000.
-my $sdelay=50000;
-my $startdelay=1000000;
-my $sendprocpid=888888;
 
-#Some essential sanity checks 
-#Is there a .scanpid file?
-
-#Before entering the loop report the last reboot time
-my $c;
-open my $P,"/proc/stat";
-{
-	local $/;
-	$c= <$P>;
-}
-close $P;
-#my ($t)=($c =~ /btime\s(\d+)/);
-#open(my $fh, '>', '/dev/shm/lastreb.proc') or die "Could not write the lastreboot time info due to $!";
-#print $fh +localtime($t)."\n";
-#close $fh;
-
-#Wait until the client startup script forks/starts the sendproc.pl and scannet.pl 
-# scripts and then read their pids to send them.
-
-
-	opendir(DIR, "/proc") || die "can't opendir /proc: $!";
-	my @procs = grep { /^[1-9][0-9]*/  } readdir(DIR);
-	closedir(DIR);
+opendir(my $dir, "/proc") || die "can't opendir /proc: $!";
+my @procs = grep { -d "/proc/$_" && /^\d+$/ } readdir($dir);
+closedir($dir);
 
 	my $timeref;
 
-	#Debug
-	#print "Processes are: @procs \n";
 
 	#Get the timeref
-	#open(TMR, "<","/proc/uptime");
-	#my @timerefa=<TMR>;
-	#close(TMR);
 	my ($secs, $microsecs)=gettimeofday;
 	my $tz=strftime("%z", localtime());
 
@@ -85,9 +56,9 @@ close $P;
 	#it is not always six digit long
 	my $pmicrosecs=sprintf( "%06d", $microsecs );
 
-	my $WRDZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.proc.gz");
+	#my $WRDZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.proc.gz");
 
-	#open WRD , ">", "/dev/shm/$secs$pmicrosecs-$tz.proc";
+	open(WRDZ, '>', "/dev/shm/$secs$pmicrosecs-$tz.proc") or die $!;
 	foreach my $proc (@procs) {
 	 	open(CMD, "<","/proc/$proc/cmdline");
 	 	my $cmdline=<CMD>;
@@ -133,18 +104,17 @@ close $P;
 			push(@openfiles,$sfn);
 
 		} #end of foreach my $fd
-    
-    		if ($#openfiles=='-1') {
-			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###LUARMv2NOOPENFILES \n"); } 
-		else { 
-			select $WRDZ;
-			$WRDZ->print("$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles \n"); 
-    		}	
+    		my $output;
+    		if (!@openfiles) {
+        		$output = "$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###LUARMv2NOOPENFILES\n";
+    		} else {
+        		$output = "$sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline###@openfiles\n";
+    		}
+    		print WRDZ $output;
 
 	 } #END OF foreach my $proc
 	
-	close($WRDZ);
+	close(WRDZ);
 
 	#Here we sample the network data now
 	#Get the IPv4 endpoints
@@ -164,8 +134,8 @@ close $P;
 	close(UDPFD6);
 	
 	#Here we construct the filename from the time stamp
-	my $WRDNETZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.net.gz");
-	select $WRDNETZ;
-	$WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
-	close($WRDNETZ);
+	#my $WRDNETZ= new IO::Compress::Gzip("/dev/shm/$secs$pmicrosecs#$tz.net.gz");
+	open(WRDNETZ, '>', "/dev/shm/$secs$pmicrosecs-$tz.net") or die $!;
+	WRDNETZ->print("$sprocpid###@tcpv4###@tcpv6###@udpv4###@udpv6");
+	close(WRDNETZ);
 
