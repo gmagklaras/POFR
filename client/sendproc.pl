@@ -166,8 +166,12 @@ sub sendfiles {
 		#Get a list of the POFR scanned proc and net compressed entries
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!"; 
 		@sampledprocfiles = sort grep { /^[1-9][0-9]*\-\+[\d]{4}.proc/  } readdir(DIR);
+		closedir(DIR);
+		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
 		@samplednetfiles = sort grep { /^[1-9][0-9]*\-\+[\d]{4}.net/ } readdir(DIR);
+		closedir(DIR);
 		#What about leftovers from being unable to contact the server within an iteration of this infinite loop.
+		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
 		@previterationtarballs=sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/  } readdir(DIR);
 		closedir(DIR);
 
