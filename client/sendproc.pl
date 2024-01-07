@@ -108,33 +108,10 @@ if ($firstssh->error == 0 && $nodealhits < 3 ) {
 	die "sendproc.pl Error: Unable to initiate an initial server SSH connection. CLIENT SHUTDOWN initiated. Bye! \n";
 }
 
-sub compressfiles {
-	opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-        my @sampleduncompressedprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc/  } readdir(DIR);
-        opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-        my @sampleduncompressednetfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net/ } readdir(DIR);
-        closedir(DIR);
-
-	#Compress the proc files
-        foreach my $uprocfile (@sampleduncompressedprocfiles) {
-		system "gzip $uprocfile";
-		#my $status = gzip "/dev/shm/$uprocfile" => "/dev/shm/$uprocfile.gz"
-		#or die "sendproc.pl Error: gzip failed for procfile $uprocfile due to: $GzipError\n";
-        }
-
-        #Compress the net files
-        foreach my $unetfile (@sampleduncompressednetfiles) {
-		system "gzip $unetfile";
-		#my $status = gzip "/dev/shm/$unetfile" => "/dev/shm/$unetfile.gz"
-		#or die "sendproc.pl Error: gzip failed for netfile $unetfile due to: $GzipError\n";
-        }
-
-} #End of compressfiles subroutine
-
 
 sub detectandsendleftovers {
 	opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-	@crashleftovertarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
+	@crashleftovertarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/  } readdir(DIR);
 	closedir(DIR);
 
 	if ( @crashleftovertarballs == 0) {
@@ -183,18 +160,18 @@ sub sendfiles {
 		#First attempt to send a list of any leftovers
 		detectandsendleftovers();
 		#Then compress the freshly produced proc and netfiles
-		compressfiles(); 
+		#compressfiles(); 
 		#Wait a bit for the files to compress
-		usleep($completiondelay);
+		#usleep($completiondelay);
 		#Get a list of the POFR scanned proc and net compressed entries
 		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!"; 
-		@sampledprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc.gz/  } readdir(DIR);
-		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-		@samplednetfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net.gz/ } readdir(DIR);
+		@sampledprocfiles = sort grep { /^[1-9][0-9]*\-\+[\d]{4}.proc/  } readdir(DIR);
+		@samplednetfiles = sort grep { /^[1-9][0-9]*\-\+[\d]{4}.net/ } readdir(DIR);
 		#What about leftovers from being unable to contact the server within an iteration of this infinite loop.
-		opendir(DIR, "/dev/shm") || die "sendproc Error: can't opendir /dev/shm: $!";
-		@previterationtarballs=sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
+		@previterationtarballs=sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/  } readdir(DIR);
 		closedir(DIR);
+
+	        print "Debug: sampled procfiles initially is @sampledprocfiles \n";
 
 		#Send any leftover tarballs from the previous iteration of the while loop
 		if ( @previterationtarballs == 0) {
@@ -272,13 +249,16 @@ sub sendfiles {
 
 		rename "/dev/shm/$secs$pmicrosecs#$tz.tar","/dev/shm/$secs$pmicrosecs#$tz#$digest.tar";
 
+		#Last thing we do is to compress the tarball. 
+		system "gzip /dev/shm/$secs$pmicrosecs#$tz#$digest.tar";
+
 		#And now send the renamed tarball over the network 
 		my $ssh = Net::OpenSSH->new($server, user => $username, password => $password, master_opts => [-o => "StrictHostKeyChecking=no"] );
 		if ( $ssh->error == 0 && $nodealhits < 3) {
 			$nodealhits=0;
-			$ssh->scp_put({quiet=>0}, "/dev/shm/$secs$pmicrosecs#$tz#$digest.tar", "/home/$username/");
+			$ssh->scp_put({quiet=>0}, "/dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz", "/home/$username/");
 			#Delete the produced tar file
-                	unlink ("/dev/shm/$secs$pmicrosecs#$tz#$digest.tar");
+                	unlink ("/dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz");
 			#Once you finish remove the contents of the scanned and file sending arrays
 			undef @sampledprocfiles;
 			undef @samplednetfiles;
@@ -293,13 +273,13 @@ sub sendfiles {
         		$nodealhits=$nodealhits+1;
         		print "sendproc.pl Info: nodealhits is: $nodealhits \n";
         		usleep($postponetime);
-			$ssh->scp_put({quiet=>0}, "/dev/shm/$secs$pmicrosecs#$tz#$digest.tar", "/home/$username/");
+			$ssh->scp_put({quiet=>0}, "/dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz", "/home/$username/");
 			if ($ssh->error == 0 ) {
 				#Recovered connection
 				$nodealhits=0;
 				print "sendproc Info: Recocered after a while loop missed connection. \n";
 				#Delete the produced tar file
-				unlink ("/dev/shm/$secs$pmicrosecs#$tz#$digest.tar");
+				unlink ("/dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz");
 				#Once you finish remove the contents of the scanned and file sending arrays
 				undef @sampledprocfiles;
                         	undef @samplednetfiles;
@@ -312,7 +292,7 @@ sub sendfiles {
 				#Nope we did not recover. Do not unlink the file,
 				#bur clear the samepleproc-net and all the relevant arrays
 				#and continue to the next iteration of the infinite while loop. 
-				print "sendproc.pl Info: Did not recover after a while loop connection missapp. Did not manage to upload file /dev/shm/$secs$pmicrosecs#$tz#$digest.tar \n";
+				print "sendproc.pl Info: Did not recover after a while loop connection missapp. Did not manage to upload file /dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz \n";
 				undef @sampledprocfiles;
                                 undef @samplednetfiles;
 				#undef @previterationtarballs;
