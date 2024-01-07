@@ -148,8 +148,7 @@ sub sanitize_filename {
 	$fnstring =~ s/\s/___/g;
         #Also check if the string is greater than 4k characters which is the limit
         #of the maximum file path in the database.
-        my $sanitizedfname=substr $fnstring,0,4095;
-        return $sanitizedfname;
+	return substr($fnstring, 0, 4095);
 
 } #End of sanitize_filename
 
