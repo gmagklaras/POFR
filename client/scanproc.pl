@@ -35,12 +35,12 @@ use strict;
 use IO::File;
 use Time::HiRes qw(usleep clock_gettime gettimeofday clock_getres CLOCK_REALTIME ITIMER_REAL ITIMER_VIRTUAL ITIMER_PROF ITIMER_REALPROF);
 use POSIX;
-use IO::Compress::Gzip;
+#use IO::Compress::Gzip;
 use POFR;
 
 my $sprocpid="$$";
 #Sampling delay - Increased for development mode. Original value 300000.
-my $sdelay=300000;
+my $sdelay=120000;
 my $startdelay=1000000;
 my $sendprocpid;
 my $scannetpid;
