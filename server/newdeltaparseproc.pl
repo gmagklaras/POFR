@@ -126,7 +126,7 @@ my @activeusers;
 foreach my $user (@cidhits) {
     	
     	opendir(DIR, "/home/$user") || die "parseproc Error: can't open user directory /home/$user: $!";
-		my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/  } readdir(DIR);
+		my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/  } readdir(DIR);
 		my @threadflags = glob ("/home/$user/.pofrthread*");
 		my $tarnums=scalar @myprocfiles;
 		my $threadfsize=scalar @threadflags;
@@ -190,15 +190,17 @@ sub filerefprocess {
 	my @filedata=split '#',$fitopr;
 	$epochplusmsec=$filedata[0];
         $tzone=$filedata[1];
-        $tzone =~ s/.proc.gz//;
+        $tzone =~ s/.proc//;
 	$msecs=substr $epochplusmsec, -6;
         $epochref=substr $epochplusmsec, 0, -6;
 	#Create the reference file
-	copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.proc.gz");
+	copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.proc");
 	#Now open and process the first file
-	my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
-        my $buffer;
-        gunzip $FHLZ => \$buffer;
+	open(FHLZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	#my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+	undef $/;
+	my $buffer=<FHLZ>;
+
 	my @lines=split "\n", $buffer;
 	#sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline
         my ($sprocpid,$pid,$ppid,$pruid,$peuid,$prgid,$pegid,$procname,$procarg,$procfiles);
@@ -423,7 +425,7 @@ sub filerefprocess {
 
 	} #end of foreach my $line (@lines)
 	
-	#Here if it all goes well, we can unlink the first file. We do NOT DELETE the referencefile.proc.gz
+	#Here if it all goes well, we can unlink the first file. We do NOT DELETE the referencefile.proc
 	unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink $threadspecificpath/dev/shm/$fitopr due to: $!";
 											
 	#Disconnect from the host database
@@ -452,7 +454,7 @@ sub fileothprocess {
 	
 
 	#Sanity check, do we we have the reference file?
-	if ( (-e "$threadspecificpath/dev/shm/referencefile.proc.gz")) {
+	if ( (-e "$threadspecificpath/dev/shm/referencefile.proc")) {
 		print "fileothprocess: User $user Found my reference file on thread number $thnum and path $threadspecificpath. \n";
 	} else {
 		die "fileothprocess: Error: USer $user Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
@@ -460,14 +462,19 @@ sub fileothprocess {
 
 	#Here we produce the Delta
 	#Read the current file
-	my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
-        my $buffer2;
-        gunzip $FHLZ => \$buffer2;
+	open(FHLZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	#my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+        undef $/;
+        my $buffer2=<FHLZ>;
+
         my @lines2=split "\n", $buffer2;
+	
 	#Read the reference file
-	my $REFZ = IO::File->new("$threadspecificpath/dev/shm/referencefile.proc.gz", '<:utf8');
-	my $buffer1;
-        gunzip $REFZ => \$buffer1;
+	open(REFZ, '<', "$threadspecificpath/dev/shm/referencefile.proc", '<:utf8') or die $!;
+        #my $REFZ = IO::File->new("$threadspecificpath/dev/shm/referencefile.proc", '<:utf8');
+        undef $/;
+        my $buffer1=<FHLZ>;
+
         my @lines1=split "\n", $buffer1;
 	#And now we produce the Delta, which 
 	my @delta = array_minus(@lines2, @lines1);
@@ -483,7 +490,7 @@ sub fileothprocess {
         my @filedata=split '#',$fitopr;
         $epochplusmsec=$filedata[0];
         $tzone=$filedata[1];
-        $tzone =~ s/.proc.gz//;
+        $tzone =~ s/.proc//;
         $msecs=substr $epochplusmsec, -6;
         $epochref=substr $epochplusmsec, 0, -6;
 	#sprocpid###$proc###$ppid###$ruid###$euid###$rgid###$egid###$name###$cmdline
@@ -494,7 +501,7 @@ sub fileothprocess {
  	my $hostservh=DBI->connect ($userdb, $dbusername, $dbpass, {RaiseError => 1, PrintError => 1});
 	
 	#Is this the last proc file on this thread?
-	my @remainingprocs = glob ("$threadspecificpath/dev/shm/*.proc.gz");
+	my @remainingprocs = glob ("$threadspecificpath/dev/shm/*.proc");
         my $nremainingprocs = scalar @remainingprocs;
 
 	if ($nremainingprocs == "1") {
@@ -717,17 +724,15 @@ sub fileothprocess {
 	 	#We are not dealing with the last *.proc.gz file in this thread, so we just
 		#update the reference file with the delta to ensure maximum efficiency
 		#we do not update the RDBMS
-
-	 	my $APPENDZ = new IO::Compress::Gzip("$threadspecificpath/dev/shm/referencefile.proc.gz", Append => 1 );
-	 	select $APPENDZ;
+		
+		open(APPENDZ, '>>', "$threadspecificpath/dev/shm/referencefile.proc") or die $!
+	 	#my $APPENDZ = new IO::Compress::Gzip("$threadspecificpath/dev/shm/referencefile.proc", Append => 1 );
 	 	foreach my $deltatoappend (@delta) {
-         		$APPENDZ->print("$deltatoappend \n");
+         		APPENDZ->print("$deltatoappend \n");
 	 	}
-	 	close($APPENDZ);
+	 	close(APPENDZ);
 		
 		unlink "$threadspecificpath/dev/shm/$fitopr" or warn "parseproc.pl Warning: Could not unlink $threadspecificpath/dev/shm/$fitopr due to: $!";
-		#Return output to STDOUT
-		select STDOUT;
       } #End of if ($remainingprocs == "1") { 
 
 } #end of fileothprocess
@@ -762,14 +767,13 @@ sub filerefnet {
 	print "filerefnet: User $user, thread $thnum: Processing file $fitopr for user $user \n";
 
 	#Create the reference net file
-        copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.net.gz");
+        copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.net");
 	
 	#Mow open and process the first net file
-	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
-
-        my $netbuffer;
-        my $contents;
-        gunzip $FHLNETZ => \$contents;
+	open(FHLNETZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	#my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+        undef $/;
+        my $netbuffer=<FHLNETZ>;
 
  	#Parse the different contents (tcp4,udp4,tcp6,udp6)
 	my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
@@ -819,7 +823,7 @@ sub fileothnet {
         my $dbpass=shift;
 
 	#Sanity check, do we we have the reference file?
-        if ( (-e "$threadspecificpath/dev/shm/referencefile.net.gz")) {
+        if ( (-e "$threadspecificpath/dev/shm/referencefile.net")) {
       		print "fileothnet: Found my reference file on thread number $thnum and path $threadspecificpath. \n";
         } else {
                 die "fileothnet: Error: Could not find my reference file on thread number $thnum and path $threadspecificpath. \n. No reference file, no delta. Exiting! \n";
@@ -828,15 +832,20 @@ sub fileothnet {
 	#Here we produce the network delta
 	print "fileothnet: Operating on file $fitopr on $user, thread number $thnum  \n";
 	#Read the latest data
-	my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
-	my $contentsnew;
-	gunzip $FHLNETZ => \$contentsnew;
+	open(FHLNETZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+        #my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
+        undef $/;
+        my $contentsnew=<FHLNETZ>;
+
 	#Parse the different contents (sprocpid, tcp4,udp4,tcp6,udp6)
 	my ($sprocpid,$newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
-        #Read the reference data
-	my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net.gz", '<:utf8');
-	my $contentsref;
-	gunzip $FHLNETZREF => \$contentsref;
+        
+	#Read the reference data
+	open(FHLNETZREF, '<', "$threadspecificpath/dev/shm/referencefile.net", '<:utf8') or die $!;
+	#my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net", '<:utf8');
+	my $contentsref=<FHLNETZREF>;
+
+	#Parse the different contents from the network reference file
 	my ($sprocpid2,$reftcpdata,$reftcpv6data,$refudpdata,$refudpv6data)=split("###", $contentsref);
 
 	#TCP V4 DELTA
@@ -899,7 +908,7 @@ sub procuser {
 	opendir(DIR, "/home/$user") || die "parseproc Error: can't open user directory /home/$user to fetch the proc files : $!";
 	
 	#Get the number of files to determine how they are going to split amongst 8 cores per user
-	my @mytarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/ } readdir(DIR);
+	my @mytarballs = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/ } readdir(DIR);
 	my @toproctarballs;
 	#Do we have more than $maxtarnum
 	if (scalar @mytarballs > $maxtarnum) {
@@ -1103,10 +1112,10 @@ sub parsefiles {
 			my ($taryear,$tarmonth,$tarday,$tarhour,$tarmin,$tarsec)=timestamp($firststamp,$firsttz);
 			move "/home/$user/$tarfile", "$threadspecificpath/$tarfile";
 			opendir(DIR, "$threadspecificpath") || die "parseproc Error: can't open thread directory /home/$user to fetch the proc files : $!";
-			my @tountarfiles= sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar/ } readdir(DIR);
+			my @tountarfiles= sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}#[\w]*.tar.gz/ } readdir(DIR);
 			foreach my $tountar (@tountarfiles) {
 				#system "tar xvf $threadspecificpath/$tountar -C $threadspecificpath";
-				system "tar xvf $threadspecificpath/$tountar -C $threadspecificpath > /dev/null 2>&1";
+				system "tar xvfz $threadspecificpath/$tountar -C $threadspecificpath > /dev/null 2>&1";
 				unlink "$threadspecificpath/$tountar";
 			} #end of foreach my $tountar
 
@@ -1128,8 +1137,8 @@ sub parsefiles {
 	
 	opendir(DIRTHREADPROC, "$threadspecificpath/dev/shm") || die "parseproc Error: can't open thread directory $threadspecificpath/dev/shm to fetch the proc files : $!";
 	opendir(DIRTHREADNET, "$threadspecificpath/dev/shm") || die "parseproc Error: can't open thread directory $threadspecificpath/dev/shm to fetch the net files : $!";
-	my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc.gz/  } readdir(DIRTHREADPROC);
-	my @mynetfiles= sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net.gz/  } readdir(DIRTHREADNET);
+	my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc/  } readdir(DIRTHREADPROC);
+	my @mynetfiles= sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net/  } readdir(DIRTHREADNET);
 	#Did we have a bunch of empty files corrupt files? If yes, we need to cleanup and terminate early
 	#to ensure that we do not leave hanging threads
 	if ( !@myprocfiles ) {
@@ -1431,8 +1440,8 @@ sub parsefiles {
                 #from home dirs and RAM (/dev/shm). We do not do something like an rmdir $threadspecificpath, in case
                 #something resets the $threadspecificpath variable and we end up deleting root dirs. We do this gradually
                 #as we do not like living dangerously. We start with the reference files.
-                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.proc.gz in the the thread specific directory $threadspecificpath: $!";
-		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net.gz" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.net.gz in the the thread specific directory $threadspecificpath: $!";
+                unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.proc" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.proc in the the thread specific directory $threadspecificpath: $!";
+		unlink "/home/$user/proc/$firststamp-$laststamp/dev/shm/referencefile.net" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the reference file: referencefile.net in the the thread specific directory $threadspecificpath: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp/dev/shm" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath/dev/shm: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp/dev" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath/dev: $!";
                 rmdir "/home/$user/proc/$firststamp-$laststamp" or warn "newdeltaparseproc.pl Warning: Inside the parsefiles subroutine: THREAD NUMBER $thnumber: Could not unlink the thread specific directory $threadspecificpath: $!";
