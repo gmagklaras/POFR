@@ -243,18 +243,18 @@ sub sendfiles {
 		#Now write the file the tar to /dev/shm, so far it is in memory.
 		$tarball->write("/dev/shm/$secs$pmicrosecs#$tz.tar");
 
-		#Ensure that we include the SHA256 hash as part of the filename
+		#Compress the tarball 
+		system "gzip /dev/shm/$secs$pmicrosecs#$tz.tar";
+
+		#Ensure that we include the SHA256 hash as part of the compressed tarball
 		#to detect file corruption from network outages or other reasons.
 		my $shahash = Digest::SHA->new(256);
-		$shahash->addfile("/dev/shm/$secs$pmicrosecs#$tz.tar");
+		$shahash->addfile("/dev/shm/$secs$pmicrosecs#$tz.tar.gz");
 		my $digest = $shahash->hexdigest;
 		#Debug 
-		print "Digest of the tar file is: $digest \n";
+		print "Digest of the compressed tar file is: $digest \n";
 
-		rename "/dev/shm/$secs$pmicrosecs#$tz.tar","/dev/shm/$secs$pmicrosecs#$tz#$digest.tar";
-
-		#Last thing we do is to compress the tarball. 
-		system "gzip /dev/shm/$secs$pmicrosecs#$tz#$digest.tar";
+		rename "/dev/shm/$secs$pmicrosecs#$tz.tar.gz","/dev/shm/$secs$pmicrosecs#$tz#$digest.tar.gz";
 
 		#And now send the renamed tarball over the network 
 		my $ssh = Net::OpenSSH->new($server, user => $username, password => $password, master_opts => [-o => "StrictHostKeyChecking=no"] );

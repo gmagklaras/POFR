@@ -473,7 +473,7 @@ sub fileothprocess {
 	open(REFZ, '<', "$threadspecificpath/dev/shm/referencefile.proc", '<:utf8') or die $!;
         #my $REFZ = IO::File->new("$threadspecificpath/dev/shm/referencefile.proc", '<:utf8');
         undef $/;
-        my $buffer1=<FHLZ>;
+        my $buffer1=<REFZ>;
 
         my @lines1=split "\n", $buffer1;
 	#And now we produce the Delta, which 
@@ -1100,8 +1100,8 @@ sub parsefiles {
 	#Now start checking the integrity of the tarballs and move them to the proper thread subdirs for processing
 	foreach my $tarfile (@$tarballref) {
 		my ($timestamp,$tz,$sha)=split(/#/,$tarfile);
-		#print "timestamp:$timestamp, tz:$tz, SHA:$sha \n";
-		my $shaonname=substr($sha,0,-4);
+		print "timestamp:$timestamp, tz:$tz, SHA:$sha \n";
+		my $shaonname=substr($sha,0,-7);
 		#Is the SHA256 hash of the tarball OK?
 		my $shahash = Digest::SHA->new(256);
         	$shahash->addfile("/home/$user/$tarfile");
