@@ -725,7 +725,7 @@ sub fileothprocess {
 		#update the reference file with the delta to ensure maximum efficiency
 		#we do not update the RDBMS
 		
-		open(APPENDZ, '>>', "$threadspecificpath/dev/shm/referencefile.proc") or die $!
+		open(APPENDZ, '>>', "$threadspecificpath/dev/shm/referencefile.proc") or die $!;
 	 	#my $APPENDZ = new IO::Compress::Gzip("$threadspecificpath/dev/shm/referencefile.proc", Append => 1 );
 	 	foreach my $deltatoappend (@delta) {
          		APPENDZ->print("$deltatoappend \n");
@@ -773,7 +773,7 @@ sub filerefnet {
 	open(FHLNETZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
 	#my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
         undef $/;
-        my $netbuffer=<FHLNETZ>;
+        my $contents=<FHLNETZ>;
 
  	#Parse the different contents (tcp4,udp4,tcp6,udp6)
 	my ($sprocpid,$tcpdata,$tcpv6data,$udpdata,$udpv6data)=split("###", $contents);
