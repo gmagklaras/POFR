@@ -770,7 +770,7 @@ sub filerefnet {
         copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.net");
 	
 	#Mow open and process the first net file
-	open(FHLNETZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	open(FHLNETZ, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/$fitopr") or die $!;
 	#my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
         undef $/;
         my $contents=<FHLNETZ>;
@@ -832,7 +832,7 @@ sub fileothnet {
 	#Here we produce the network delta
 	print "fileothnet: Operating on file $fitopr on $user, thread number $thnum  \n";
 	#Read the latest data
-	open(FHLNETZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	open(FHLNETZ, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/$fitopr") or die $!;
         #my $FHLNETZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
         undef $/;
         my $contentsnew=<FHLNETZ>;
@@ -841,7 +841,7 @@ sub fileothnet {
 	my ($sprocpid,$newtcpdata,$newtcpv6data,$newudpdata,$newudpv6data)=split("###", $contentsnew);
         
 	#Read the reference data
-	open(FHLNETZREF, '<', "$threadspecificpath/dev/shm/referencefile.net", '<:utf8') or die $!;
+	open(FHLNETZREF, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/referencefile.net") or die $!;
 	#my $FHLNETZREF = IO::File->new("$threadspecificpath/dev/shm/referencefile.net", '<:utf8');
 	my $contentsref=<FHLNETZREF>;
 
