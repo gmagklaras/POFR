@@ -187,7 +187,7 @@ sub filerefprocess {
         my $epochref;
         my $msecs;
         my $epochplusmsec;
-	my @filedata=split '#',$fitopr;
+	my @filedata=split '-',$fitopr;
 	$epochplusmsec=$filedata[0];
         $tzone=$filedata[1];
         $tzone =~ s/.proc//;
@@ -487,7 +487,7 @@ sub fileothprocess {
         my $epochref;
         my $msecs;
         my $epochplusmsec;
-        my @filedata=split '#',$fitopr;
+        my @filedata=split '-',$fitopr;
         $epochplusmsec=$filedata[0];
         $tzone=$filedata[1];
         $tzone =~ s/.proc//;
@@ -1137,8 +1137,8 @@ sub parsefiles {
 	
 	opendir(DIRTHREADPROC, "$threadspecificpath/dev/shm") || die "parseproc Error: can't open thread directory $threadspecificpath/dev/shm to fetch the proc files : $!";
 	opendir(DIRTHREADNET, "$threadspecificpath/dev/shm") || die "parseproc Error: can't open thread directory $threadspecificpath/dev/shm to fetch the net files : $!";
-	my @myprocfiles = sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.proc/  } readdir(DIRTHREADPROC);
-	my @mynetfiles= sort grep { /^[1-9][0-9]*#(\-|\+)[\d]{4}.net/  } readdir(DIRTHREADNET);
+	my @myprocfiles = sort grep {  /^[1-9][0-9]*\-\+[\d]{4}.proc/  } readdir(DIRTHREADPROC);
+	my @mynetfiles= sort grep {  /^[1-9][0-9]*\-\+[\d]{4}.net/  } readdir(DIRTHREADNET);
 	#Did we have a bunch of empty files corrupt files? If yes, we need to cleanup and terminate early
 	#to ensure that we do not leave hanging threads
 	if ( !@myprocfiles ) {

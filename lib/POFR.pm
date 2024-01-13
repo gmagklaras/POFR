@@ -1128,10 +1128,10 @@ sub processnetfile {
 	#Timing issues
         my $epochref;
         my $epochplusmsec;
-        my @filedata=split '#',$fitopr;
+        my @filedata=split '-',$fitopr;
         $epochplusmsec=$filedata[0];
         my $tzone=$filedata[1];
-        $tzone =~ s/.net.gz//;
+        $tzone =~ s/.net//;
         my $msecs=substr $epochplusmsec, -6;
         $epochref=substr $epochplusmsec, 0, -6;
 
