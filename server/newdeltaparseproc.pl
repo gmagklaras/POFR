@@ -196,7 +196,7 @@ sub filerefprocess {
 	#Create the reference file
 	copy ("$threadspecificpath/dev/shm/$fitopr", "$threadspecificpath/dev/shm/referencefile.proc");
 	#Now open and process the first file
-	open(FHLZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	open(FHLZ, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/$fitopr" ) or die $!;
 	#my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
 	undef $/;
 	my $buffer=<FHLZ>;
@@ -462,7 +462,7 @@ sub fileothprocess {
 
 	#Here we produce the Delta
 	#Read the current file
-	open(FHLZ, '<', "$threadspecificpath/dev/shm/$fitopr", '<:utf8') or die $!;
+	open(FHLZ, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/$fitopr") or die $!;
 	#my $FHLZ = IO::File->new("$threadspecificpath/dev/shm/$fitopr", '<:utf8');
         undef $/;
         my $buffer2=<FHLZ>;
@@ -470,7 +470,7 @@ sub fileothprocess {
         my @lines2=split "\n", $buffer2;
 	
 	#Read the reference file
-	open(REFZ, '<', "$threadspecificpath/dev/shm/referencefile.proc", '<:utf8') or die $!;
+	open(REFZ, '<:encoding(UTF-8)', "$threadspecificpath/dev/shm/referencefile.proc") or die $!;
         #my $REFZ = IO::File->new("$threadspecificpath/dev/shm/referencefile.proc", '<:utf8');
         undef $/;
         my $buffer1=<REFZ>;
