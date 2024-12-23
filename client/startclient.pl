@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.2/x86_64-linux -I ../pofrperl/lib/5.38.2
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.40.0/x86_64-linux -I ../pofrperl/lib/5.40.0
 #
-use lib '../pofrperl/lib/site_perl/5.38.2';
+use lib '../pofrperl/lib/site_perl/5.40.0';
 
 #startclient.pl: A script to start the POFR client processes
 
