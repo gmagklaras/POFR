@@ -38,8 +38,8 @@ cpan -i Time::HiRes
 cpan -i Digest::SHA
 cpan -i Digest::MD5
 cpan -i Encode
-cpan -i DateTime
-cpan -i DateTime::Format::Duration
+cpan -f -i DateTime
+cpan -f -i DateTime::Format::Duration
 cpan -i Parallel::ForkManager
 cpan -i POSIX
 cpan -i Sys::Hostname
