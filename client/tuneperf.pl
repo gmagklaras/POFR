@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.40.0/x86_64-linux -I ../pofrperl/lib/5.40.0 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.42.1/x86_64-linux -I ../pofrperl/lib/5.42.1 -I ../lib
 #
-use lib '../pofrperl/lib/site_perl/5.40.0';
+use lib '../pofrperl/lib/site_perl/5.42.1';
 
 #tune2perf.pl: This script implements a single cycle of the /proc filesystem.
 #To be used with time and/or perf stat in order to time a single cycle 
@@ -10,7 +10,7 @@ use lib '../pofrperl/lib/site_perl/5.40.0';
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
-#Copyright (C) 2021,2022,2023 Georgios Magklaras
+#Copyright (C) 2021,2022,2023,2024,2025,2026 Georgios Magklaras
 
 #Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
 #`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) written by Georgios Magklaras, 
