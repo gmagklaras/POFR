@@ -24,10 +24,7 @@ POFR uses an agentless client/server architecture. Clients are the systems to mo
 * Minimum implementation complexity: No proprietary kernel hooks or complex installation/deployment software dependencies. 
 * Acceptable system security: No agents running on client systems exposing open network ports. Data are cryptographically signed and pushed to the server by using encrypted channels.
 * Balanced computational overhead and data accuracy: The data extracted from the clients should provide a reasonable level of accuracy to reconstruct event sequences, not at the expense of computational overhead for the monitored systems.
-  
 
-POFR clients have been tested with CentOS/RHEL/ALMALinux versions 7, 8 and 9, Fedora 38/39/40/41, as well as recent versions of Ubuntu.
-For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sample KVM and Docker images provided. 
 
 ## Dependencies and requirements
 
@@ -36,7 +33,7 @@ Minimal dependencies are required. A compatible distro. For the client part, the
 * RHEL9/CentOS 9/AlmaLinux 9/Rocky Linux 9
 * RHEL10/AlmaLinux 10/Rocky Linux 10
 * Fedora 42/43
-* Ubuntu LTS/20.04 LTS/22.04.1 LTS
+* Ubuntu LTS/22.04.1 LTS and latter versions
 
 For the server part, we recommend:
 * Fedora 42
@@ -58,9 +55,9 @@ POFR distributes a copy of the IP2Location™ Lite, an open source geolocation d
 
 ## License, Credits and Release Versions
 
-POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Georgios Magklaras. 
+POFR is an Open Source solution distributed under the terms of the GNU General Public License version 2. Please consult the [LICENSE file](/LICENSE) for more details. It is developed by Steelcyber Scientific.  
 
-The latest production release of POFR is v1.3.4 named "Deborah Washington Brown" (Dec 24, 2024). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
+The latest production release of POFR is v1.4.0 named "Joyce Currie Little" (Apr 02, 2026). Previous versions are available from the [POFR Release Archive](https://github.com/gmagklaras/POFR/releases).  
 
 The name of every POFR release honors the contribution of women in Computer Science and Mathematics.
 
