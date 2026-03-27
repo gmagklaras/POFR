@@ -4,7 +4,8 @@ Improvements/upgrades/compatibility issues:
   - Upgrade of POFR Perl release from version 5.38.2 to version 5.42.1 addressing all security and bug issues of PERL.
   - Introducing support for the RHEL 10 and derivative distros (Alma/Rocky)
   - Introducing the scponly for RHEL 10 and derivatives to version 4.8-37.
-  - Upgrade of the IP2LOCATION LITE DB to December 2023 version.
+  - Upgrade of the IP2LOCATION LITE DB to the March 2026 version. Files are
+  compressed to ensure that we do not git a Github large file issue. 
 
 v1.3.2 named "named "Katherine Johnson" (Dec 18, 2023)
 This is a minor version upgrade release
