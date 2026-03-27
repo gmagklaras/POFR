@@ -32,19 +32,20 @@ For a server, we recommend either a CentOS 7 or a Fedora 33/34 distro OR the sam
 ## Dependencies and requirements
 
 Minimal dependencies are required. A compatible distro. For the client part, the following Linux distributions are known to work with POFR:
-* RHEL7/CentOS 7
 * RHEL8/CentOS 8/AlmaLinux 8/Rocky Linux 8
 * RHEL9/CentOS 9/AlmaLinux 9/Rocky Linux 9
-* Fedora 38/39/40/41
-* Ubuntu 18.04 LTS/20.04 LTS/22.04.1 LTS
+* RHEL10/AlmaLinux 10/Rocky Linux 10
+* Fedora 42/43
+* Ubuntu LTS/20.04 LTS/22.04.1 LTS
 
 For the server part, we recommend:
-* Fedora 40
+* Fedora 42
 * RHEL/AlmaLinux/Rocky Linux 9 
+* RHEL/AlmaLinux/Rocky Linux 10
 
 with a MariaDB (versions 10.5 and 10.6) RDBMS backend.
 
-Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.40.0)). 
+Everything else needed by the client and server components is provided by the POFR itself (including its own PERL distribution which is usually based on the most/recent up-to-date PERL version (v. 5.42.1)). 
 
 In addition, you will need to ensure that: 
 * The POFR clients can reach port 22 (SSH) of the POFR server (directly or via NAT)
