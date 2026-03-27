@@ -1,6 +1,33 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.2/x86_64-linux -I ../pofrperl/lib/5.38.2 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.42.1/x86_64-linux -I ../pofrperl/lib/5.42.1 -I ../lib
 ###
-use lib '../pofrperl/lib/site_perl/5.38.2';
+use lib '../pofrperl/lib/site_perl/5.42.1';
+
+#findrange.pl - A script that helps the POFR engine detect/mine data from a certain date range
+
+#POFR - Penguin OS Forensic (or Flight) Recorder - 
+#A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
+#and derivatives.
+#Copyright (C) 2021,2022,2023,2024,2025,2026 Georgios Magklaras
+
+#Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
+#`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) 
+#Arnstein Orten, February 1 2021, Assistant Director for IT infrastructure
+
+
+#This program is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License along
+#with this program; if not, write to the Free Software Foundation, Inc.,
+#51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 
 use strict;
 use warnings;

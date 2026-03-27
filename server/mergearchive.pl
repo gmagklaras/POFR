@@ -1,6 +1,6 @@
-#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.38.2/x86_64-linux -I ../pofrperl/lib/5.38.2 -I ../lib
+#!../pofrperl/bin/perl -w -I ../pofrperl/lib/5.42.1/x86_64-linux -I ../pofrperl/lib/5.42.1 -I ../lib
 ###
-use lib '../pofrperl/lib/site_perl/5.38.2';
+use lib '../pofrperl/lib/site_perl/5.42.1';
 
 ##mergearchive.pl -- This POFR engine script created the archive POFR tables, in order to reduce rendundancy of info. Called manually by the POFR server 
 #administrator.
@@ -8,7 +8,7 @@ use lib '../pofrperl/lib/site_perl/5.38.2';
 #POFR - Penguin OS Forensic (or Flight) Recorder - 
 #A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System 
 #and derivatives.
-#Copyright (C) 2021,2022,2023 Georgios Magklaras
+#Copyright (C) 2021,2022,2023,2025,2026 Georgios Magklaras
 
 #Meteorologisk Institutt/The Norwegian Meteorological Institute, hereby disclaims all copyright interest in the program
 #`POFR' (A program that collects stores and organizes for further analysis process execution, file access and network/socket endpoint data from the Linux Operating System and derivatives ) written by Georgios Magklaras, 
